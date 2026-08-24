@@ -1,4 +1,4 @@
-/// Microsoft 365 service plans included in subscription SKUs, such as Exchange, SharePoint, Defender, and Purview capabilities.
+/// E5とE3の見直しに使う日本語の業務機能カタログ。Graph内部コードは監査用途として非表示で保持する。
 table 'Service Plan'
 
 	column 'Service Plan ID'
@@ -8,15 +8,51 @@ table 'Service Plan'
 		summarizeBy: none
 		sourceColumn: service_plan_id
 
-	/// Microsoft product capability name returned by subscribedSkus.
+	/// Raw Microsoft Graph service plan code retained for audit and troubleshooting.
 	column 'Service Plan Name'
 		dataType: string
+		isHidden
+		isAvailableInMdx: false
 		summarizeBy: none
 		sourceColumn: service_plan_name
+
+	/// 複数のGraph内部プランをまとめた、利用者向けの日本語機能名。
+	column '機能名'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: service_plan_display_name
+
+	/// E5の高度機能をセキュリティ、コンプライアンスなどに分類した業務カテゴリ。
+	column カテゴリ
+		dataType: string
+		summarizeBy: none
+		sourceColumn: service_category
+
+	/// E5とE3の見直しで、この機能を判断材料として扱うかを示す区分。
+	column '判断区分'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: decision_scope
+
+	/// ライセンス変更前に確認すべき利用実績、ポリシー、業務要件。
+	column '確認ポイント'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: decision_note
+
+	/// 技術・付帯プランを通常の判断画面から除外する制御フラグ。
+	column 'レポート表示対象'
+		dataType: boolean
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: is_reportable
 
 	/// Directory object type to which Microsoft applies the service plan.
 	column 'Applies To'
 		dataType: string
+		isHidden
+		isAvailableInMdx: false
 		summarizeBy: none
 		sourceColumn: applies_to
 

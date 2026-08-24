@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "ServicePlanHeader",
+  "name": "FullyEnabledHeader",
   "position": {
-    "x": 24,
-    "y": 14,
-    "z": 1000,
+    "x": 632,
+    "y": 72,
+    "z": 4000,
     "height": 48,
-    "width": 1232,
-    "tabOrder": 1000
+    "width": 290,
+    "tabOrder": 4000
   },
   "visual": {
     "visualType": "textbox",
@@ -27,7 +27,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#EAF1FF'"
                     }
                   }
                 }
@@ -58,7 +58,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#EAF1FF'"
                     }
                   }
                 }
@@ -144,11 +144,11 @@
               {
                 "textRuns": [
                   {
-                    "value": "M365 License FinOps | E5の高度機能が誰に有効かを確認",
+                    "value": "全員有効",
                     "textStyle": {
                       "fontFamily": "Segoe UI Semibold",
-                      "fontSize": "22px",
-                      "color": "#17181C"
+                      "fontSize": "17px",
+                      "color": "#1026B8"
                     }
                   }
                 ],

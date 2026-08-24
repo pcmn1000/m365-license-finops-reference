@@ -88,6 +88,70 @@ SKU_DISPLAY_NAMES = {
     "MICROSOFT_365_COPILOT": "Microsoft 365 Copilot",
     "MICROSOFT_TEAMS_ENTERPRISE_NEW": "Microsoft Teams Enterprise (base license)",
 }
+SERVICE_PLAN_CATALOG = {
+    "AAD_PREMIUM_P2": ("高度なID保護・特権管理", "ID・アクセス管理", "PIM、Identity Protection、Access Reviewsなど。実際の運用状況を確認します。"),
+    "ATP_ENTERPRISE": ("メール・Teamsの高度脅威対策", "セキュリティ", "メールとコラボレーションの高度な脅威対策です。ポリシー適用と検知状況を確認します。"),
+    "WINDEFATP": ("端末の脅威検知・対応", "セキュリティ", "端末の検知・対応機能です。オンボード端末数とアラート運用を確認します。"),
+    "ATA": ("社内IDの脅威検知", "セキュリティ", "オンプレミスIDの脅威検知です。センサー展開と監視対象を確認します。"),
+    "ADALLOM_S_O365": ("クラウドアプリの監視・制御", "セキュリティ", "クラウドアプリの可視化・制御です。ポリシーとコネクター設定を確認します。"),
+    "ADALLOM_S_STANDALONE": ("クラウドアプリの監視・制御", "セキュリティ", "クラウドアプリの可視化・制御です。ポリシーとコネクター設定を確認します。"),
+    "MTP": ("セキュリティ事故の統合管理", "セキュリティ", "複数Defender製品を横断する統合検知・対応です。インシデント運用を確認します。"),
+    "THREAT_INTELLIGENCE": ("脅威情報の調査", "セキュリティ", "脅威インテリジェンス機能です。利用部門と調査プロセスを確認します。"),
+    "EQUIVIO_ANALYTICS": ("法務調査・電子情報開示", "コンプライアンス", "高度な電子情報開示です。ケース作成や法務調査の実績を確認します。"),
+    "PURVIEW_DISCOVERY": ("法務調査・電子情報開示", "コンプライアンス", "高度な電子情報開示です。ケース作成や法務調査の実績を確認します。"),
+    "DATA_INVESTIGATIONS": ("法務調査・電子情報開示", "コンプライアンス", "高度な電子情報開示です。ケース作成や法務調査の実績を確認します。"),
+    "M365_ADVANCED_AUDITING": ("高度な監査ログ・長期保持", "コンプライアンス", "長期保持と高度な監査機能です。監査検索・保持要件を確認します。"),
+    "INSIDER_RISK": ("内部不正リスクの検知", "コンプライアンス", "内部不正リスクの検知です。対象ユーザーとポリシー運用を確認します。"),
+    "INSIDER_RISK_MANAGEMENT": ("内部不正リスクの検知", "コンプライアンス", "内部不正リスクの検知です。対象ユーザーとポリシー運用を確認します。"),
+    "COMMUNICATIONS_COMPLIANCE": ("不適切なコミュニケーションの検知", "コンプライアンス", "不適切なコミュニケーションの検知です。ポリシーとレビュー運用を確認します。"),
+    "MICROSOFT_COMMUNICATION_COMPLIANCE": ("不適切なコミュニケーションの検知", "コンプライアンス", "不適切なコミュニケーションの検知です。ポリシーとレビュー運用を確認します。"),
+    "INFORMATION_BARRIERS": ("部門間コミュニケーションの分離", "コンプライアンス", "部門間コミュニケーションの分離です。セグメントとポリシー適用を確認します。"),
+    "RECORDS_MANAGEMENT": ("重要記録の保持・廃棄", "コンプライアンス", "重要記録の保持・廃棄管理です。レコードラベルと処理実績を確認します。"),
+    "INFO_GOVERNANCE": ("データの保持・廃棄", "コンプライアンス", "情報の保持・廃棄管理です。保持ポリシーの対象範囲を確認します。"),
+    "MICROSOFTENDPOINTDLP": ("機密情報の持ち出し防止（DLP）", "情報保護", "端末を含むデータ持ち出し防止です。ポリシー適用とアラートを確認します。"),
+    "COMMUNICATIONS_DLP": ("機密情報の持ち出し防止（DLP）", "情報保護", "コミュニケーションを含むデータ損失防止です。ポリシー適用を確認します。"),
+    "MIP_S_CLP2": ("機密ラベル・自動分類", "情報保護", "機密ラベルと自動分類です。ラベル公開・自動適用の実績を確認します。"),
+    "ML_CLASSIFICATION": ("機密ラベル・自動分類", "情報保護", "機密ラベルと自動分類です。ラベル公開・自動適用の実績を確認します。"),
+    "Content_Explorer": ("機密ラベル・自動分類", "情報保護", "機密ラベルと自動分類です。ラベル公開・自動適用の実績を確認します。"),
+    "RMS_S_PREMIUM2": ("機密ラベル・自動分類", "情報保護", "高度な情報保護機能です。ラベルと暗号化の運用を確認します。"),
+    "PAM_ENTERPRISE": ("Office 365管理操作の承認", "ID・アクセス管理", "管理操作の承認制御です。承認ポリシーと利用実績を確認します。"),
+    "CustomerLockboxA_Enterprise": ("Microsoftのデータアクセス承認", "コンプライアンス", "Microsoftによるデータアクセスの承認制御です。承認要件を確認します。"),
+    "LOCKBOX_ENTERPRISE": ("Microsoftのデータアクセス承認", "コンプライアンス", "Microsoftによるデータアクセスの承認制御です。承認要件を確認します。"),
+    "CUSTOMER_KEY": ("顧客管理キーによる暗号化", "情報保護", "顧客管理キーによる暗号化です。鍵管理要件と構成を確認します。"),
+    "PREMIUM_ENCRYPTION": ("メールの高度暗号化", "情報保護", "高度なメール暗号化です。暗号化ルールと外部共有要件を確認します。"),
+    "BI_AZURE_P2": ("Power BIの共有・共同作業", "分析", "Power BIの共有・共同作業権利です。実際のPower BI利用者を確認します。"),
+    "MCOEV": ("Teams電話・クラウドPBX", "コミュニケーション", "クラウドPBX機能です。電話番号割当と通話利用を確認します。"),
+    "MCOMEETADV": ("Teamsダイヤルイン会議", "コミュニケーション", "ダイヤルイン会議機能です。会議ポリシーと利用実績を確認します。"),
+    "SAFEDOCS": ("Office文書の安全性検査", "セキュリティ", "Office文書の安全性検査です。ポリシーが有効か確認します。"),
+    "MICROSOFT_MYANALYTICS_FULL": ("働き方の高度分析", "分析", "働き方の高度分析です。対象者と分析運用を確認します。"),
+    "MYANALYTICS_P2": ("働き方の高度分析", "分析", "働き方の高度分析です。対象者と分析運用を確認します。"),
+    "INSIGHTS_BY_MYANALYTICS": ("働き方の高度分析", "分析", "働き方の高度分析です。対象者と分析運用を確認します。"),
+}
+SERVICE_CATEGORY_DISPLAY_NAMES = {
+    "ID・アクセス管理": "ID管理",
+    "コミュニケーション": "通話・会議",
+    "コンプライアンス": "法務・監査",
+}
+
+
+def service_plan_metadata(service_plan_name):
+    metadata = SERVICE_PLAN_CATALOG.get(service_plan_name)
+    if metadata is None:
+        return {
+            "service_plan_display_name": service_plan_name,
+            "service_category": "技術・付帯プラン",
+            "decision_scope": "分析対象外",
+            "decision_note": "Graph内部の技術プランです。通常のE5/E3判断画面には表示しません。",
+            "is_reportable": False,
+        }
+    display_name, category, note = metadata
+    return {
+        "service_plan_display_name": display_name,
+        "service_category": SERVICE_CATEGORY_DISPLAY_NAMES.get(category, category),
+        "decision_scope": "E5差分候補",
+        "decision_note": note,
+        "is_reportable": True,
+    }
 
 
 def acquire_graph_token():
@@ -405,11 +469,14 @@ for sku in subscribed_skus:
     )
     for plan in sku.get("servicePlans") or []:
         service_plan_id = str(plan.get("servicePlanId", "")).lower()
+        service_plan_name = plan.get("servicePlanName") or "Unknown"
+        plan_metadata = service_plan_metadata(service_plan_name)
         service_plan_by_id.setdefault(
             service_plan_id,
             {
                 "service_plan_id": service_plan_id,
-                "service_plan_name": plan.get("servicePlanName"),
+                "service_plan_name": service_plan_name,
+                **plan_metadata,
                 "applies_to": plan.get("appliesTo"),
             },
         )
@@ -556,6 +623,11 @@ dim_service_plan_schema = StructType(
     [
         StructField("service_plan_id", StringType(), False),
         StructField("service_plan_name", StringType(), True),
+        StructField("service_plan_display_name", StringType(), False),
+        StructField("service_category", StringType(), False),
+        StructField("decision_scope", StringType(), False),
+        StructField("decision_note", StringType(), False),
+        StructField("is_reportable", BooleanType(), False),
         StructField("applies_to", StringType(), True),
     ]
 )

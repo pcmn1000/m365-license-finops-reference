@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "ServiceLicenseSlicer",
+  "name": "E5AssignedUsers",
   "position": {
     "x": 24,
     "y": 130,
@@ -10,7 +10,7 @@
     "tabOrder": 6000
   },
   "visual": {
-    "visualType": "slicer",
+    "visualType": "cardVisual",
     "visualContainerObjects": {
       "title": [
         {
@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'ライセンスを選択'"
+                  "Value": "'Microsoft 365 E5 ユーザー'"
                 }
               }
             },
@@ -142,22 +142,57 @@
     },
     "drillFilterOtherVisuals": true,
     "objects": {
-      "data": [
+      "layout": [
         {
           "properties": {
-            "mode": {
+            "style": {
               "expr": {
                 "Literal": {
-                  "Value": "'Dropdown'"
+                  "Value": "'Cards'"
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'top'"
+                }
+              }
+            },
+            "rowCount": {
+              "expr": {
+                "Literal": {
+                  "Value": "1L"
+                }
+              }
+            },
+            "columnCount": {
+              "expr": {
+                "Literal": {
+                  "Value": "1L"
+                }
+              }
+            },
+            "cellPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
                 }
               }
             }
           }
         }
       ],
-      "items": [
+      "value": [
         {
           "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "22D"
+                }
+              }
+            },
             "fontFamily": {
               "expr": {
                 "Literal": {
@@ -165,10 +200,10 @@
                 }
               }
             },
-            "textSize": {
+            "horizontalAlignment": {
               "expr": {
                 "Literal": {
-                  "Value": "13D"
+                  "Value": "'left'"
                 }
               }
             },
@@ -182,8 +217,67 @@
                   }
                 }
               }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "label": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "shapeCustomRectangle": [
+        {
+          "properties": {
+            "tileShape": {
+              "expr": {
+                "Literal": {
+                  "Value": "'rectangleRounded'"
+                }
+              }
             },
-            "background": {
+            "rectangleRoundedCurve": {
+              "expr": {
+                "Literal": {
+                  "Value": "12L"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "fillCustom": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "fillColor": {
               "solid": {
                 "color": {
                   "expr": {
@@ -194,10 +288,13 @@
                 }
               }
             }
+          },
+          "selector": {
+            "id": "default"
           }
         }
       ],
-      "visualHeader": [
+      "outline": [
         {
           "properties": {
             "show": {
@@ -207,28 +304,89 @@
                 }
               }
             }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "shadowCustom": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "paddingSelection": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Custom'"
+                }
+              }
+            },
+            "topMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "18L"
+                }
+              }
+            },
+            "leftMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "18L"
+                }
+              }
+            },
+            "rightMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "18L"
+                }
+              }
+            },
+            "bottomMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "14L"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
           }
         }
       ]
     },
     "query": {
       "queryState": {
-        "Values": {
+        "Data": {
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "License SKU"
+                      "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "License Name"
+                  "Property": "# E5 Assigned Users"
                 }
               },
-              "queryRef": "License SKU.License Name",
-              "active": true,
-              "nativeQueryRef": "ライセンス名"
+              "queryRef": "Service Entitlement.# E5 Assigned Users"
             }
           ]
         }

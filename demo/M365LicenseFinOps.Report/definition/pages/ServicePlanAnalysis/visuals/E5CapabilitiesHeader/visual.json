@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "EnabledPlansHeader",
+  "name": "E5CapabilitiesHeader",
   "position": {
-    "x": 632,
+    "x": 328,
     "y": 72,
-    "z": 4000,
+    "z": 3000,
     "height": 48,
     "width": 290,
-    "tabOrder": 4000
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "textbox",
@@ -144,7 +144,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "有効な権利",
+                    "value": "高度機能",
                     "textStyle": {
                       "fontFamily": "Segoe UI Semibold",
                       "fontSize": "17px",

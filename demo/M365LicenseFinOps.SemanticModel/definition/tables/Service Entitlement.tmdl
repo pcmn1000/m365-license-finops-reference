@@ -98,6 +98,248 @@ table 'Service Entitlement'
 		formatString: #,##0
 		displayFolder: Entitlements
 
+	/// Distinct users entitled to the selected business capability in the latest snapshot.
+	measure '# Target Users' = ```
+			VAR _latestSnapshot = [Latest Entitlement Snapshot Date]
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot)
+				)
+			```
+		formatString: #,##0
+		displayFolder: Decision Support
+
+	/// Distinct users for whom the selected business capability is enabled in the latest snapshot.
+	measure '# Enabled Users' = ```
+			VAR _latestSnapshot = [Latest Entitlement Snapshot Date]
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('Service Entitlement'[Is Enabled] = TRUE())
+				)
+			```
+		formatString: #,##0
+		displayFolder: Decision Support
+
+	/// Distinct users for whom the selected business capability is disabled in the latest snapshot.
+	measure '# Disabled Users' = ```
+			VAR _latestSnapshot = [Latest Entitlement Snapshot Date]
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('Service Entitlement'[Is Enabled] = FALSE())
+				)
+			```
+		formatString: #,##0
+		displayFolder: Decision Support
+
+	/// Share of target users for whom the selected business capability is enabled.
+	measure 'Capability Enablement Rate' = ```
+			DIVIDE([# Enabled Users], [# Target Users])
+			```
+		formatString: 0.0%
+		displayFolder: Decision Support
+
+	/// Human-readable configuration finding. Enablement is not treated as proof of actual usage.
+	measure 'Capability Configuration Status' = ```
+			VAR _targetUsers = [# Target Users]
+			VAR _enabledUsers = [# Enabled Users]
+			VAR _disabledUsers = [# Disabled Users]
+			RETURN
+				SWITCH(
+					TRUE(),
+					_targetUsers = 0, "対象なし",
+					_enabledUsers = 0, "全員無効",
+					_disabledUsers > 0, "一部無効",
+					"全員有効（利用実績は別確認）"
+				)
+			```
+		formatString: General
+		displayFolder: Decision Support
+
+	/// 最新スナップショットでMicrosoft 365 E5（Teamsなし）が割り当てられているユーザー数。
+	measure '# E5 Assigned Users' = ```
+			VAR _latestSnapshot =
+				CALCULATE(
+					[Latest Entitlement Snapshot Date],
+					REMOVEFILTERS('Service Plan')
+				)
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+					REMOVEFILTERS('Service Plan')
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 選択中の業務機能が付与されているE5ユーザー数。
+	measure '# E5 Capability Target Users' = ```
+			VAR _latestSnapshot =
+				CALCULATE(
+					[Latest Entitlement Snapshot Date],
+					REMOVEFILTERS('Service Plan')
+				)
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)")
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 選択中の業務機能を構成する内部プランがすべて有効なE5ユーザー数。
+	measure '# E5 Capability Enabled Users' = ```
+			VAR _latestSnapshot =
+				CALCULATE(
+					[Latest Entitlement Snapshot Date],
+					REMOVEFILTERS('Service Plan')
+				)
+			VAR _targetUsers =
+				CALCULATETABLE(
+					VALUES('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)")
+				)
+			RETURN
+				COUNTROWS(
+					FILTER(
+						_targetUsers,
+						VAR _enabledPlans =
+							CALCULATE(
+								COUNTROWS('Service Entitlement'),
+								KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+								KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+								KEEPFILTERS('Service Entitlement'[Is Enabled] = TRUE())
+							)
+						VAR _disabledPlans =
+							CALCULATE(
+								COUNTROWS('Service Entitlement'),
+								KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+								KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+								KEEPFILTERS('Service Entitlement'[Is Enabled] = FALSE())
+							)
+						RETURN
+							_enabledPlans > 0 && _disabledPlans = 0
+					)
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 選択中の業務機能で、1つ以上の内部プランが無効なE5ユーザー数。
+	measure '# E5 Capability Disabled Users' = ```
+			VAR _targetUsers = [# E5 Capability Target Users]
+			VAR _enabledUsers = [# E5 Capability Enabled Users]
+			RETURN
+				MAX(_targetUsers - _enabledUsers, 0)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// E5とE3の見直し対象として日本語化された業務機能数。
+	measure '# E5 Decision Capabilities' = ```
+			VAR _capabilities =
+				CALCULATETABLE(
+					VALUES('Service Plan'[機能名]),
+					KEEPFILTERS('Service Plan'[レポート表示対象] = TRUE()),
+					KEEPFILTERS('Service Plan'[判断区分] = "E5差分候補")
+				)
+			RETURN
+				COUNTROWS(
+					FILTER(_capabilities, [# E5 Capability Target Users] > 0)
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// すべての対象E5ユーザーで構成プランが有効な業務機能数。
+	measure '# E5 Fully Enabled Capabilities' = ```
+			VAR _capabilities =
+				CALCULATETABLE(
+					VALUES('Service Plan'[機能名]),
+					KEEPFILTERS('Service Plan'[レポート表示対象] = TRUE()),
+					KEEPFILTERS('Service Plan'[判断区分] = "E5差分候補")
+				)
+			RETURN
+				COUNTROWS(
+					FILTER(
+						_capabilities,
+						[# E5 Capability Target Users] > 0
+							&& [# E5 Capability Disabled Users] = 0
+					)
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 一部またはすべての対象E5ユーザーで構成プランが無効な業務機能数。
+	measure '# E5 Capabilities Requiring Review' = ```
+			VAR _capabilities =
+				CALCULATETABLE(
+					VALUES('Service Plan'[機能名]),
+					KEEPFILTERS('Service Plan'[レポート表示対象] = TRUE()),
+					KEEPFILTERS('Service Plan'[判断区分] = "E5差分候補")
+				)
+			RETURN
+				COALESCE(
+					COUNTROWS(
+						FILTER(_capabilities, [# E5 Capability Disabled Users] > 0)
+					),
+					0
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 表示対象の業務機能について、構成プランがすべて有効なE5ユーザー数。
+	measure '有効ユーザー数' = ```
+			IF(
+				SELECTEDVALUE('Service Plan'[レポート表示対象], FALSE()),
+				[# E5 Capability Enabled Users]
+			)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 表示対象の業務機能について、1つ以上の構成プランが無効なE5ユーザー数。
+	measure '無効ユーザー数' = ```
+			IF(
+				SELECTEDVALUE('Service Plan'[レポート表示対象], FALSE()),
+				COALESCE([# E5 Capability Disabled Users], 0)
+			)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 表示対象の業務機能について、E5ユーザーへの設定状況を日本語で示す。
+	measure '設定状況' = ```
+			VAR _isReportable =
+				SELECTEDVALUE('Service Plan'[レポート表示対象], FALSE())
+			VAR _targetUsers = [# E5 Capability Target Users]
+			VAR _disabledUsers = [# E5 Capability Disabled Users]
+			RETURN
+				IF(
+					_isReportable,
+					SWITCH(
+						TRUE(),
+						_targetUsers = 0, "対象ユーザーなし",
+						_disabledUsers = _targetUsers, "全員で無効",
+						_disabledUsers > 0, "一部ユーザーで無効",
+						"全員に有効"
+					)
+			)
+			```
+		formatString: General
+		displayFolder: E5 Review
+
 	column 'Snapshot Date'
 		dataType: dateTime
 		isHidden

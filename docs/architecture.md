@@ -59,7 +59,7 @@ Bronzeは再処理と監査のために保持し、Power BIから直接参照し
 | `dim_organization` | 部門、事業部、会社、コストセンター階層 |
 | `dim_location` | 拠点、国、地域、タイムゾーン |
 | `dim_sku` | SKUと購入/割当可能数 |
-| `dim_service_plan` | SKUに含まれるサービスプラン |
+| `dim_service_plan` | Graph内部プランと、日本語の業務機能名・カテゴリ・E5判断区分 |
 | `bridge_sku_service_plan` | SKUとサービスプランの多対多関係 |
 | `fact_license_assignment` | 日次または変更時点のユーザー×SKU |
 | `fact_service_entitlement` | ユーザー×サービスプランの有効/無効・プロビジョニング状態 |
@@ -97,6 +97,9 @@ Bronzeは再処理と監査のために保持し、Power BIから直接参照し
 ### 表示ルール
 
 - 「自動解約」ではなく「要確認候補」と表示
+- Graphの内部プラン名は監査用に保持し、通常画面では日本語の業務機能へ集約
+- 技術・付帯プランはE5/E3判断画面から除外
+- サービスプランの有効化は設定シグナルであり、利用実績として扱わない
 - `recommendation_reason`、`evidence_date`、`excluded_by_policy`を保持
 - 推定削減額と、判断に使えなかった情報を併記
 

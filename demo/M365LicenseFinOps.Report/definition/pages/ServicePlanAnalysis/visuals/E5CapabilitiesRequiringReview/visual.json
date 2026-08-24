@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "IncludedServicePlans",
+  "name": "E5CapabilitiesRequiringReview",
   "position": {
-    "x": 328,
+    "x": 936,
     "y": 130,
-    "z": 7000,
+    "z": 9000,
     "height": 148,
-    "width": 290,
-    "tabOrder": 7000
+    "width": 320,
+    "tabOrder": 9000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'サービスプラン数'"
+                  "Value": "'一部または全員で無効'"
                 }
               }
             },
@@ -383,10 +383,10 @@
                       "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "# Included Service Plans"
+                  "Property": "# E5 Capabilities Requiring Review"
                 }
               },
-              "queryRef": "Service Entitlement.# Included Service Plans"
+              "queryRef": "Service Entitlement.# E5 Capabilities Requiring Review"
             }
           ]
         }

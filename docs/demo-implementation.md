@@ -5,7 +5,7 @@
 | リソース | 名前 |
 | --- | --- |
 | Fabric workspace | `M365 License FinOps` |
-| Fabric capacity | `fcm365licensefinopsjpe001` (F2, Japan East) |
+| Fabric capacity | `fcm365licensefinopsjpe001` (F8, Japan East) |
 | Lakehouse | `M365LicenseFinOps` |
 | Notebook | `SyncM365LicenseUsage` |
 | Price notebook | `SyncM365PriceMaster` (`673f5bd4-1f3b-4f98-a547-b1109e37f32d`) |
@@ -25,7 +25,7 @@
 5. `SyncM365PriceMaster`でExcelだけを検証・反映
 6. `SyncM365LicenseUsage`はライセンス/組織/Usageを日次同期
 7. Direct Lakeモデルへ`Service Plan`と`Service Entitlement`を追加
-8. Power BIへ`サービスプラン`ページを追加
+8. Power BIへ`E5機能チェック`ページを追加
 
 SPO管理フォルダー:
 
@@ -46,18 +46,30 @@ SPO管理フォルダー:
 - 不正な行では本番価格が破壊されず、エラーが出る
 - Fabric容量が`Active`である
 
-## サービスプランページの検証値
+## E5機能チェックページの読み方
 
-日次PipelineとDirect Lake Refreshの完了後、DAXで次を確認しました。
+Graphの`servicePlanName`は監査・トラブルシューティング用にモデルへ保持しますが、
+レポートには直接表示しません。E5/E3判断に関係する内部プランだけを、
+`高度なID保護・特権管理`、`端末の脅威検知・対応`、
+`法務調査・電子情報開示`など、用途が分かる日本語の業務機能へ集約します。
 
-| ライセンス | 含有プラン | 有効なユーザー権利 | 無効なユーザー権利 | 有効率 |
-| --- | ---: | ---: | ---: | ---: |
-| Microsoft 365 Copilot | 10 | 250 | 0 | 100.0% |
-| Microsoft 365 E5 (no Teams) | 97 | 2,425 | 0 | 100.0% |
-| Microsoft Teams Enterprise | 16 | 250 | 150 | 62.5% |
-| Microsoft Teams Premium | 6 | 150 | 0 | 100.0% |
+ページでは次を確認します。
 
-`FLOW_FREE`もGraphから検出されます。無料SKUのため価格マスタには含めず、契約コストの
+- Microsoft 365 E5の対象ユーザー数
+- E5/E3判断に使う業務機能数
+- 全対象ユーザーで有効な機能数
+- 一部または全対象ユーザーで無効な機能数
+- 業務機能ごとの有効ユーザー数、無効ユーザー数、設定状況
+
+ユーザー×内部プランの行数はKPIにしません。複数の内部プランが同じ業務機能を
+構成する場合も、利用者には1つの業務機能として表示します。未登録の技術・付帯プランは
+通常画面から除外します。
+
+ここでの「有効」はライセンス設定を示し、実利用の証拠ではありません。全員有効でも、
+Usage、Purview/Defenderポリシー、特権ロール、例外、契約条件を確認してから
+E3/E5を判断します。
+
+`FLOW_FREE`もGraphから検出されますが、無料SKUのため価格マスタには含めず、契約コストの
 対象外として扱います。
 
 ## 更新頻度

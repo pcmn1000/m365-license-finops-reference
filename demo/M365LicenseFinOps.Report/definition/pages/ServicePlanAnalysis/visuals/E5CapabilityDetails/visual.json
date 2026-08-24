@@ -1,16 +1,16 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "DisabledEntitlements",
+  "name": "E5CapabilityDetails",
   "position": {
-    "x": 936,
-    "y": 130,
-    "z": 9000,
-    "height": 148,
-    "width": 320,
-    "tabOrder": 9000
+    "x": 400,
+    "y": 330,
+    "z": 12000,
+    "height": 370,
+    "width": 856,
+    "tabOrder": 12000
   },
   "visual": {
-    "visualType": "cardVisual",
+    "visualType": "tableEx",
     "visualContainerObjects": {
       "title": [
         {
@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'無効なユーザー権利'"
+                  "Value": "'E5の高度機能と対象ユーザー'"
                 }
               }
             },
@@ -142,68 +142,20 @@
     },
     "drillFilterOtherVisuals": true,
     "objects": {
-      "layout": [
+      "columnHeaders": [
         {
           "properties": {
-            "style": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Cards'"
-                }
-              }
-            },
-            "alignment": {
-              "expr": {
-                "Literal": {
-                  "Value": "'top'"
-                }
-              }
-            },
-            "rowCount": {
-              "expr": {
-                "Literal": {
-                  "Value": "1L"
-                }
-              }
-            },
-            "columnCount": {
-              "expr": {
-                "Literal": {
-                  "Value": "1L"
-                }
-              }
-            },
-            "cellPadding": {
-              "expr": {
-                "Literal": {
-                  "Value": "0L"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "value": [
-        {
-          "properties": {
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "22D"
-                }
-              }
-            },
             "fontFamily": {
               "expr": {
                 "Literal": {
-                  "Value": "'Segoe UI'"
+                  "Value": "'Segoe UI Semibold'"
                 }
               }
             },
-            "horizontalAlignment": {
+            "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "'left'"
+                  "Value": "10D"
                 }
               }
             },
@@ -217,67 +169,95 @@
                   }
                 }
               }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#EAF1FF'"
+                    }
+                  }
+                }
+              }
             }
-          },
-          "selector": {
-            "id": "default"
           }
         }
       ],
-      "label": [
+      "grid": [
         {
           "properties": {
-            "show": {
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "7D"
+                }
+              }
+            },
+            "textSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            },
+            "gridVertical": {
               "expr": {
                 "Literal": {
                   "Value": "false"
                 }
               }
-            }
-          },
-          "selector": {
-            "id": "default"
-          }
-        }
-      ],
-      "shapeCustomRectangle": [
-        {
-          "properties": {
-            "tileShape": {
-              "expr": {
-                "Literal": {
-                  "Value": "'rectangleRounded'"
-                }
-              }
             },
-            "rectangleRoundedCurve": {
-              "expr": {
-                "Literal": {
-                  "Value": "12L"
-                }
-              }
-            }
-          },
-          "selector": {
-            "id": "default"
-          }
-        }
-      ],
-      "fillCustom": [
-        {
-          "properties": {
-            "show": {
+            "gridHorizontal": {
               "expr": {
                 "Literal": {
                   "Value": "true"
                 }
               }
+            },
+            "outlineColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#E4E6EC'"
+                    }
+                  }
+                }
+              }
             }
           }
-        },
+        }
+      ],
+      "values": [
         {
           "properties": {
-            "fillColor": {
+            "fontFamily": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Segoe UI'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            },
+            "fontColorPrimary": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#17181C'"
+                    }
+                  }
+                }
+              }
+            },
+            "backColorPrimary": {
               "solid": {
                 "color": {
                   "expr": {
@@ -288,13 +268,23 @@
                 }
               }
             }
-          },
-          "selector": {
-            "id": "default"
           }
         }
       ],
-      "outline": [
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "visualHeader": [
         {
           "properties": {
             "show": {
@@ -304,77 +294,42 @@
                 }
               }
             }
-          },
-          "selector": {
-            "id": "default"
-          }
-        }
-      ],
-      "shadowCustom": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
-          },
-          "selector": {
-            "id": "default"
-          }
-        }
-      ],
-      "padding": [
-        {
-          "properties": {
-            "paddingSelection": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Custom'"
-                }
-              }
-            },
-            "topMargin": {
-              "expr": {
-                "Literal": {
-                  "Value": "18L"
-                }
-              }
-            },
-            "leftMargin": {
-              "expr": {
-                "Literal": {
-                  "Value": "18L"
-                }
-              }
-            },
-            "rightMargin": {
-              "expr": {
-                "Literal": {
-                  "Value": "18L"
-                }
-              }
-            },
-            "bottomMargin": {
-              "expr": {
-                "Literal": {
-                  "Value": "14L"
-                }
-              }
-            }
-          },
-          "selector": {
-            "id": "default"
           }
         }
       ]
     },
     "query": {
       "queryState": {
-        "Data": {
+        "Values": {
           "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Service Plan"
+                    }
+                  },
+                  "Property": "機能名"
+                }
+              },
+              "queryRef": "Service Plan.機能名",
+              "nativeQueryRef": "機能名"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Service Plan"
+                    }
+                  },
+                  "Property": "カテゴリ"
+                }
+              },
+              "queryRef": "Service Plan.カテゴリ",
+              "nativeQueryRef": "カテゴリ"
+            },
             {
               "field": {
                 "Measure": {
@@ -383,13 +338,56 @@
                       "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "# Disabled Entitlements"
+                  "Property": "有効ユーザー数"
                 }
               },
-              "queryRef": "Service Entitlement.# Disabled Entitlements"
+              "queryRef": "Service Entitlement.有効ユーザー数"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Service Entitlement"
+                    }
+                  },
+                  "Property": "無効ユーザー数"
+                }
+              },
+              "queryRef": "Service Entitlement.無効ユーザー数"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Service Entitlement"
+                    }
+                  },
+                  "Property": "設定状況"
+                }
+              },
+              "queryRef": "Service Entitlement.設定状況"
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Service Entitlement"
+                  }
+                },
+                "Property": "無効ユーザー数"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
       }
     }
   }

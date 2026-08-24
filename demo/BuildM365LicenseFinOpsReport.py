@@ -21,6 +21,8 @@ COLORS = {
     "line": "#E4E6EC",
     "brand": "#1026B8",
     "brand_light": "#CBD5F4",
+    "warning_surface": "#FFF6D8",
+    "warning_ink": "#6A4B00",
     "white": "#FFFFFF",
 }
 
@@ -451,9 +453,13 @@ def build_pages():
     active_rate = measure("License Utilization", "Active Rate")
     monthly_cost = measure("License Utilization", "Monthly Cost")
     recoverable_cost = measure("License Utilization", "Recoverable Cost")
-    included_plans = measure("Service Entitlement", "# Included Service Plans")
-    enabled_entitlements = measure("Service Entitlement", "# Enabled Entitlements")
-    disabled_entitlements = measure("Service Entitlement", "# Disabled Entitlements")
+    decision_capabilities = measure("Service Entitlement", "# E5 Decision Capabilities")
+    reportable_enabled_users = measure(
+        "Service Entitlement", "有効ユーザー数"
+    )
+    reportable_disabled_users = measure(
+        "Service Entitlement", "無効ユーザー数"
+    )
 
     return [
         {
@@ -608,81 +614,105 @@ def build_pages():
         },
         {
             "name": "ServicePlanAnalysis",
-            "displayName": "サービスプラン",
+            "displayName": "E5機能チェック",
             "visuals": [
                 page_header(
                     "ServicePlanHeader",
                     "M365 License FinOps",
-                    "ライセンスに含まれるサービスの有効・無効",
+                    "E5の高度機能が誰に有効かを確認",
                 ),
-                section_header("ServiceLicenseHeader", 24, 290, "対象ライセンス"),
-                section_header("IncludedPlansHeader", 328, 290, "含まれるサービス"),
-                section_header("EnabledPlansHeader", 632, 290, "有効な権利"),
-                section_header("DisabledPlansHeader", 936, 320, "無効な権利"),
-                slicer(
-                    "ServiceLicenseSlicer",
+                section_header("E5UsersHeader", 24, 290, "E5対象ユーザー"),
+                section_header("E5CapabilitiesHeader", 328, 290, "高度機能"),
+                section_header("FullyEnabledHeader", 632, 290, "全員有効"),
+                section_header("ReviewRequiredHeader", 936, 320, "無効設定あり"),
+                card(
+                    "E5AssignedUsers",
                     24,
                     130,
                     290,
-                    "ライセンスを選択",
-                    column("License SKU", "License Name", True, "ライセンス名"),
+                    "Microsoft 365 E5 ユーザー",
+                    "Service Entitlement",
+                    "# E5 Assigned Users",
                 ),
                 card(
-                    "IncludedServicePlans",
+                    "E5DecisionCapabilities",
                     328,
                     130,
                     290,
-                    "サービスプラン数",
+                    "確認する高度機能",
                     "Service Entitlement",
-                    "# Included Service Plans",
+                    "# E5 Decision Capabilities",
                 ),
                 card(
-                    "EnabledEntitlements",
+                    "E5FullyEnabledCapabilities",
                     632,
                     130,
                     290,
-                    "有効なユーザー権利",
+                    "全対象ユーザーで有効",
                     "Service Entitlement",
-                    "# Enabled Entitlements",
+                    "# E5 Fully Enabled Capabilities",
                 ),
                 card(
-                    "DisabledEntitlements",
+                    "E5CapabilitiesRequiringReview",
                     936,
                     130,
                     320,
-                    "無効なユーザー権利",
+                    "一部または全員で無効",
                     "Service Entitlement",
-                    "# Disabled Entitlements",
+                    "# E5 Capabilities Requiring Review",
+                ),
+                textbox(
+                    "E5AssessmentCaveat",
+                    24,
+                    286,
+                    1232,
+                    32,
+                    "有効はライセンス設定です。実際の利用、セキュリティ・コンプライアンスポリシー、業務要件を確認してE3/E5を判断します。",
+                    12,
+                    COLORS["warning_surface"],
+                    COLORS["warning_ink"],
                 ),
                 bar_chart(
-                    "ServiceEnabledUsers",
+                    "CapabilityCategorySummary",
                     24,
-                    296,
-                    430,
-                    404,
-                    "サービス別 有効ユーザー権利",
-                    column("Service Plan", "Service Plan Name", True),
-                    [enabled_entitlements],
-                    enabled_entitlements,
+                    330,
+                    360,
+                    370,
+                    "機能カテゴリ別の確認対象数",
+                    column("Service Plan", "カテゴリ", True),
+                    [decision_capabilities],
+                    decision_capabilities,
                 ),
                 table(
-                    "ServicePlanDetails",
-                    468,
-                    296,
-                    788,
-                    404,
-                    "サービスプラン詳細",
+                    "E5CapabilityDetails",
+                    400,
+                    330,
+                    856,
+                    370,
+                    "E5の高度機能と対象ユーザー",
                     [
                         column(
                             "Service Plan",
-                            "Service Plan Name",
-                            display_name="サービスプラン",
+                            "機能名",
+                            display_name="機能名",
                         ),
-                        enabled_entitlements,
-                        disabled_entitlements,
+                        column("Service Plan", "カテゴリ", display_name="カテゴリ"),
+                        reportable_enabled_users,
+                        reportable_disabled_users,
+                        measure(
+                            "Service Entitlement",
+                            "設定状況",
+                        ),
                     ],
-                    disabled_entitlements,
+                    reportable_disabled_users,
                 ),
+            ],
+            "visualInteractions": [
+                {
+                    "source": "CapabilityCategorySummary",
+                    "target": "E5CapabilityDetails",
+                    "type": "DataFilter",
+                }
             ],
         },
         {

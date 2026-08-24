@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "DisabledPlansHeader",
+  "name": "E5UsersHeader",
   "position": {
-    "x": 936,
+    "x": 24,
     "y": 72,
-    "z": 5000,
+    "z": 2000,
     "height": 48,
-    "width": 320,
-    "tabOrder": 5000
+    "width": 290,
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "textbox",
@@ -144,7 +144,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "無効な権利",
+                    "value": "E5対象ユーザー",
                     "textStyle": {
                       "fontFamily": "Segoe UI Semibold",
                       "fontSize": "17px",
