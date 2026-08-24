@@ -1,0 +1,27 @@
+/// Microsoft 365 service plans included in subscription SKUs, such as Exchange, SharePoint, Defender, and Purview capabilities.
+table 'Service Plan'
+
+	column 'Service Plan ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: service_plan_id
+
+	/// Microsoft product capability name returned by subscribedSkus.
+	column 'Service Plan Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: service_plan_name
+
+	/// Directory object type to which Microsoft applies the service plan.
+	column 'Applies To'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: applies_to
+
+	partition 'Service Plan' = entity
+		mode: directLake
+		source
+			entityName: dim_service_plan
+			expressionSource: 'DirectLake - M365LicenseFinOps'

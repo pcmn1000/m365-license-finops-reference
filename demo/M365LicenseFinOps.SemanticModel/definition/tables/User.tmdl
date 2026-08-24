@@ -45,6 +45,40 @@ table User
 		summarizeBy: none
 		sourceColumn: office_location
 
+	/// Country associated with the user's current organization and office assignment.
+	column Country
+		dataType: string
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country
+
+	/// City used for geographic license cost and utilization analysis.
+	column City
+		dataType: string
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: city
+
+	/// Stable HR employee identifier retained for governed joins but hidden from report authors.
+	column 'Employee ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: employee_id
+
+	/// Business division supplied through Microsoft Entra employee organization data.
+	column Division
+		dataType: string
+		summarizeBy: none
+		sourceColumn: division
+
+	/// Finance cost center supplied through Microsoft Entra employee organization data.
+	column 'Cost Center'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: cost_center
+
 	/// Whether the Microsoft Entra account can sign in.
 	column 'Account Enabled'
 		dataType: boolean

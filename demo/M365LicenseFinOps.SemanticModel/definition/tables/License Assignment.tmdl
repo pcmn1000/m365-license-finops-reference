@@ -2,17 +2,16 @@
 table 'License Assignment'
 
 	/// Latest assignment snapshot available to the model.
-	measure 'Latest Assignment Snapshot Date' = ```
+	measure 'Latest Assignment Snapshot Date' =
 			CALCULATE(
 				MAX('License Assignment'[Snapshot Date]),
 				REMOVEFILTERS('License Assignment'[Snapshot Date])
 			)
-			```
 		formatString: yyyy-MM-dd
 		displayFolder: Freshness
 
 	/// Direct license assignments in the latest snapshot.
-	measure '# Direct Assignments' = ```
+	measure '# Direct Assignments' =
 			VAR _latestSnapshot = [Latest Assignment Snapshot Date]
 			RETURN
 				CALCULATE(
@@ -20,12 +19,11 @@ table 'License Assignment'
 					KEEPFILTERS('License Assignment'[Snapshot Date] = _latestSnapshot),
 					KEEPFILTERS('License Assignment'[Assignment Source] = "Direct")
 				)
-			```
 		formatString: #,##0
 		displayFolder: Assignment
 
 	/// Group-based license assignments in the latest snapshot.
-	measure '# Group Assignments' = ```
+	measure '# Group Assignments' =
 			VAR _latestSnapshot = [Latest Assignment Snapshot Date]
 			RETURN
 				CALCULATE(
@@ -33,7 +31,17 @@ table 'License Assignment'
 					KEEPFILTERS('License Assignment'[Snapshot Date] = _latestSnapshot),
 					KEEPFILTERS('License Assignment'[Assignment Source] = "Group")
 				)
-			```
+		formatString: #,##0
+		displayFolder: Assignment
+
+	/// User-SKU license assignments in the latest snapshot.
+	measure '# Latest Assignments' =
+			VAR _latestSnapshot = [Latest Assignment Snapshot Date]
+			RETURN
+				CALCULATE(
+					COUNTROWS('License Assignment'),
+					KEEPFILTERS('License Assignment'[Snapshot Date] = _latestSnapshot)
+				)
 		formatString: #,##0
 		displayFolder: Assignment
 

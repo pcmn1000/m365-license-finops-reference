@@ -2,17 +2,16 @@
 table 'M365 Usage'
 
 	/// Latest Microsoft 365 usage snapshot available to the model.
-	measure 'Latest M365 Snapshot Date' = ```
+	measure 'Latest M365 Snapshot Date' =
 			CALCULATE(
 				MAX('M365 Usage'[Snapshot Date]),
 				REMOVEFILTERS('M365 Usage'[Snapshot Date])
 			)
-			```
 		formatString: yyyy-MM-dd
 		displayFolder: Freshness
 
 	/// Users with any supported Microsoft 365 service activity in the latest snapshot.
-	measure '# M365 Users with Activity' = ```
+	measure '# M365 Users with Activity' =
 			VAR _latestSnapshot = [Latest M365 Snapshot Date]
 			RETURN
 				COALESCE(
@@ -23,7 +22,6 @@ table 'M365 Usage'
 					),
 					0
 				)
-			```
 		formatString: #,##0
 		displayFolder: Activity
 

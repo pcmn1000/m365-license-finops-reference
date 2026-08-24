@@ -31,12 +31,6 @@ table 'License SKU'
 		summarizeBy: none
 		sourceColumn: sku_part_number
 
-	/// Friendly product name used in report slicers and labels.
-	column 'License Name'
-		dataType: string
-		summarizeBy: none
-		sourceColumn: sku_display_name
-
 	/// Current Microsoft 365 subscription capability state.
 	column 'Capability Status'
 		dataType: string
@@ -67,10 +61,16 @@ table 'License SKU'
 	column 'Snapshot Date'
 		dataType: dateTime
 		isHidden
-		isAvailableInMdx: false
 		formatString: yyyy-MM-dd
+		isAvailableInMdx: false
 		summarizeBy: none
 		sourceColumn: snapshot_date
+
+	/// Business-friendly license name; distinguishes base products from add-ons.
+	column 'License Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sku_display_name
 
 	partition 'License SKU' = entity
 		mode: directLake

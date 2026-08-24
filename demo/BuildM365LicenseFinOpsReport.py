@@ -451,6 +451,9 @@ def build_pages():
     active_rate = measure("License Utilization", "Active Rate")
     monthly_cost = measure("License Utilization", "Monthly Cost")
     recoverable_cost = measure("License Utilization", "Recoverable Cost")
+    included_plans = measure("Service Entitlement", "# Included Service Plans")
+    enabled_entitlements = measure("Service Entitlement", "# Enabled Entitlements")
+    disabled_entitlements = measure("Service Entitlement", "# Disabled Entitlements")
 
     return [
         {
@@ -600,6 +603,85 @@ def build_pages():
                     column("User", "Department", True),
                     [recoverable_cost],
                     recoverable_cost,
+                ),
+            ],
+        },
+        {
+            "name": "ServicePlanAnalysis",
+            "displayName": "サービスプラン",
+            "visuals": [
+                page_header(
+                    "ServicePlanHeader",
+                    "M365 License FinOps",
+                    "ライセンスに含まれるサービスの有効・無効",
+                ),
+                section_header("ServiceLicenseHeader", 24, 290, "対象ライセンス"),
+                section_header("IncludedPlansHeader", 328, 290, "含まれるサービス"),
+                section_header("EnabledPlansHeader", 632, 290, "有効な権利"),
+                section_header("DisabledPlansHeader", 936, 320, "無効な権利"),
+                slicer(
+                    "ServiceLicenseSlicer",
+                    24,
+                    130,
+                    290,
+                    "ライセンスを選択",
+                    column("License SKU", "License Name", True, "ライセンス名"),
+                ),
+                card(
+                    "IncludedServicePlans",
+                    328,
+                    130,
+                    290,
+                    "サービスプラン数",
+                    "Service Entitlement",
+                    "# Included Service Plans",
+                ),
+                card(
+                    "EnabledEntitlements",
+                    632,
+                    130,
+                    290,
+                    "有効なユーザー権利",
+                    "Service Entitlement",
+                    "# Enabled Entitlements",
+                ),
+                card(
+                    "DisabledEntitlements",
+                    936,
+                    130,
+                    320,
+                    "無効なユーザー権利",
+                    "Service Entitlement",
+                    "# Disabled Entitlements",
+                ),
+                bar_chart(
+                    "ServiceEnabledUsers",
+                    24,
+                    296,
+                    430,
+                    404,
+                    "サービス別 有効ユーザー権利",
+                    column("Service Plan", "Service Plan Name", True),
+                    [enabled_entitlements],
+                    enabled_entitlements,
+                ),
+                table(
+                    "ServicePlanDetails",
+                    468,
+                    296,
+                    788,
+                    404,
+                    "サービスプラン詳細",
+                    [
+                        column(
+                            "Service Plan",
+                            "Service Plan Name",
+                            display_name="サービスプラン",
+                        ),
+                        enabled_entitlements,
+                        disabled_entitlements,
+                    ],
+                    disabled_entitlements,
                 ),
             ],
         },

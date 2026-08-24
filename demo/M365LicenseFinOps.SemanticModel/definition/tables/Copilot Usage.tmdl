@@ -2,17 +2,16 @@
 table 'Copilot Usage'
 
 	/// Latest Copilot usage snapshot available to the model.
-	measure 'Latest Copilot Snapshot Date' = ```
+	measure 'Latest Copilot Snapshot Date' =
 			CALCULATE(
 				MAX('Copilot Usage'[Snapshot Date]),
 				REMOVEFILTERS('Copilot Usage'[Snapshot Date])
 			)
-			```
 		formatString: yyyy-MM-dd
 		displayFolder: Freshness
 
 	/// Users with recorded Copilot activity in the latest snapshot.
-	measure '# Copilot Active Users' = ```
+	measure '# Copilot Active Users' =
 			VAR _latestSnapshot = [Latest Copilot Snapshot Date]
 			RETURN
 				COALESCE(
@@ -23,12 +22,11 @@ table 'Copilot Usage'
 					),
 					0
 				)
-			```
 		formatString: #,##0
 		displayFolder: Activity
 
 	/// Prompts submitted across supported Copilot applications in the latest snapshot.
-	measure '# Copilot Prompts' = ```
+	measure '# Copilot Prompts' =
 			VAR _latestSnapshot = [Latest Copilot Snapshot Date]
 			RETURN
 				COALESCE(
@@ -38,7 +36,6 @@ table 'Copilot Usage'
 					),
 					0
 				)
-			```
 		formatString: #,##0
 		displayFolder: Prompts
 

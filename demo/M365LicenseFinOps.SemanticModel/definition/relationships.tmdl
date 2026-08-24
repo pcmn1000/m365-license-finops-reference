@@ -25,3 +25,15 @@ relationship 'M365 Usage to User'
 relationship 'Copilot Usage to User'
 	fromColumn: 'Copilot Usage'.'User ID'
 	toColumn: User.'User ID'
+
+relationship 'Service Entitlement - User'
+	fromColumn: 'Service Entitlement'.'User ID'
+	toColumn: User.'User ID'
+
+relationship 'Service Entitlement - License SKU'
+	fromColumn: 'Service Entitlement'.'SKU ID'
+	toColumn: 'License SKU'.'SKU ID'
+
+relationship 'Service Entitlement - Service Plan'
+	fromColumn: 'Service Entitlement'.'Service Plan ID'
+	toColumn: 'Service Plan'.'Service Plan ID'

@@ -11,7 +11,7 @@
 | Price notebook | `SyncM365PriceMaster` (`673f5bd4-1f3b-4f98-a547-b1109e37f32d`) |
 | Pipeline | `DailyM365LicenseSync` |
 | Semantic model | `M365 License FinOps Model` |
-| Report | `M365 License FinOps Report` |
+| Report | `M365 License FinOps Report`（4ページ） |
 | SPO site | `M365 License FinOps Data` |
 | Fabric connection | `M365FinOpsSPO admin` (`673c247a-7b90-4865-b78b-a703191d7515`) |
 | OneLake Shortcut | `Files/reference/sharepoint-license-prices` |
@@ -24,6 +24,8 @@
 4. Lakehouse `Files/reference/sharepoint-license-prices`にShortcutを作成
 5. `SyncM365PriceMaster`でExcelだけを検証・反映
 6. `SyncM365LicenseUsage`はライセンス/組織/Usageを日次同期
+7. Direct Lakeモデルへ`Service Plan`と`Service Entitlement`を追加
+8. Power BIへ`サービスプラン`ページを追加
 
 SPO管理フォルダー:
 
@@ -43,6 +45,20 @@ SPO管理フォルダー:
 - 単価を変更して再実行するとPower BIの月額コストへ反映される
 - 不正な行では本番価格が破壊されず、エラーが出る
 - Fabric容量が`Active`である
+
+## サービスプランページの検証値
+
+日次PipelineとDirect Lake Refreshの完了後、DAXで次を確認しました。
+
+| ライセンス | 含有プラン | 有効なユーザー権利 | 無効なユーザー権利 | 有効率 |
+| --- | ---: | ---: | ---: | ---: |
+| Microsoft 365 Copilot | 10 | 250 | 0 | 100.0% |
+| Microsoft 365 E5 (no Teams) | 97 | 2,425 | 0 | 100.0% |
+| Microsoft Teams Enterprise | 16 | 250 | 150 | 62.5% |
+| Microsoft Teams Premium | 6 | 150 | 0 | 100.0% |
+
+`FLOW_FREE`もGraphから検出されます。無料SKUのため価格マスタには含めず、契約コストの
+対象外として扱います。
 
 ## 更新頻度
 
