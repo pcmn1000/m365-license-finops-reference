@@ -7,7 +7,7 @@ Microsoft Fabric に統合し、Power BI と Fabric Data Agent から分析す�
 この構成は次の問いに答えることを目的とします。
 
 - 何を何ライセンス購入し、誰に割り当てているか
-- E3/E5 などのサービスプランを有効化しているか
+- ID保護、脅威対策、法務・監査など、E5の高度機能が誰に有効か
 - Exchange、Teams、OneDrive、SharePoint、Office アプリ、Copilot を利用しているか
 - 部門、拠点、会社、コストセンター別にいくら負担しているか
 - 未利用、低利用、重複割り当て、ダウングレード候補はどこか
