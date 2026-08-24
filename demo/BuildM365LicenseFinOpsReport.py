@@ -707,7 +707,7 @@ def build_pages():
                 card(
                     "E5AssignedUsers",
                     24,
-                    130,
+                    82,
                     290,
                     "Microsoft 365 E5 ユーザー",
                     "Service Entitlement",
@@ -716,7 +716,7 @@ def build_pages():
                 card(
                     "E5DecisionCapabilities",
                     328,
-                    130,
+                    82,
                     290,
                     "確認する高度機能",
                     "Service Entitlement",
@@ -725,7 +725,7 @@ def build_pages():
                 card(
                     "E5FullyEnabledCapabilities",
                     632,
-                    130,
+                    82,
                     290,
                     "全対象ユーザーで有効",
                     "Service Entitlement",
@@ -734,7 +734,7 @@ def build_pages():
                 card(
                     "E5CapabilitiesRequiringReview",
                     936,
-                    130,
+                    82,
                     320,
                     "一部または全員で無効",
                     "Service Entitlement",
@@ -743,9 +743,9 @@ def build_pages():
                 bar_chart(
                     "CapabilityCategorySummary",
                     24,
-                    296,
+                    246,
                     360,
-                    404,
+                    454,
                     "機能カテゴリ別の確認対象数",
                     column("Service Plan", "カテゴリ", True),
                     [decision_capabilities],
@@ -754,9 +754,9 @@ def build_pages():
                 table(
                     "E5CapabilityDetails",
                     400,
-                    296,
+                    246,
                     856,
-                    404,
+                    454,
                     "E5の高度機能とMicrosoft製品名",
                     [
                         column(
