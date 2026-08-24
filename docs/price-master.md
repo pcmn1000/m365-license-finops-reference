@@ -7,7 +7,7 @@ flowchart LR
     OWNER["財務 / 調達 / ライセンス管理者"]
     APPROVAL["SharePoint承認・バージョン履歴"]
     XLSX["License-Price-Master.xlsx<br/>Excel Table: LicensePrices"]
-    SC["OneLake Shortcut<br/>Files/reference/license-prices"]
+    SC["OneLake Shortcut<br/>Files/reference/sharepoint-license-prices"]
     NB["Fabric Notebook<br/>型・重複・有効期間検証"]
     QUAR["Quarantine<br/>不正行 + エラー理由"]
     DELTA[("dim_license_price_history<br/>Delta")]

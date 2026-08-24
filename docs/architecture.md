@@ -9,15 +9,15 @@ Microsoft Graph、HRIS、SharePoint Onlineは業務上の正本です。Fabric�
 
 ### データの速度を3レーンに分ける
 
-#### Fast lane: 割り当て・組織属性
+#### Daily directory lane: 割り当て・組織属性
 
-- `/users/delta`で変更ユーザーだけを15分ごとに取得
+- `/users`を日次取得し、必要に応じて`/users/delta`で転送量を最適化
 - `department`、`officeLocation`、`employeeOrgData`、`assignedLicenses`を選択
 - `@odata.deltaLink`を制御テーブルに保存
-- 夜間に全件スナップショットを取得し、削除や取りこぼしを照合
+- 定期的に全件スナップショットを取得し、削除や取りこぼしを照合
 
-Graph deltaはポーリング量を減らす仕組みであり、厳密なイベントストリームではありません。
-レポート上は「最終同期日時」を表示します。
+Graph deltaは日次同期の転送量を減らす最適化であり、リアルタイム要件には使いません。
+レポート上は「最終同期日」を表示します。
 
 #### Daily lane: 利用実績
 

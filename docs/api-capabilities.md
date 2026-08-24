@@ -56,8 +56,8 @@ employeeOrgData,assignedLicenses,licenseAssignmentStates
 | 処理 | 推奨方式 |
 | --- | --- |
 | 初回 | `/users`全件 + `/subscribedSkus` + Usage Reports |
-| 日中 | `/users/delta`を15分ごと、`/subscribedSkus`を1時間ごと |
-| 夜間 | 全件照合、Usage Reports、Copilot Reports、品質チェック |
+| 日次 | `/users`または`/users/delta`、`/subscribedSkus`、Usage Reports、Copilot Reports、品質チェック |
+| 週次 | 全件照合でdelta取りこぼし、削除、属性差分を確認 |
 | 詳細調査 | 変更ユーザーまたは候補ユーザーだけ`licenseDetails`を取得 |
 
 すべてのGraph呼び出しでページング、429/503/504の指数バックオフ、request ID、

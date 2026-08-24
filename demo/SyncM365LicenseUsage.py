@@ -59,7 +59,9 @@ REPORT_PERIOD = "D180"
 SNAPSHOT_DATE = datetime.now(timezone.utc).date()
 PUBLIC_LIST_PRICE_AS_OF = date(2026, 8, 3)
 PUBLIC_LIST_PRICE_SOURCE = "Microsoft public list price JP (annual, tax excl.)"
-PRICE_MASTER_RELATIVE_PATH = "Files/reference/license-prices/License-Price-Master.xlsx"
+PRICE_MASTER_RELATIVE_PATH = (
+    "Files/reference/sharepoint-license-prices/License-Price-Master.xlsx"
+)
 PRICE_MASTER_LOCAL_PATH = f"/lakehouse/default/{PRICE_MASTER_RELATIVE_PATH}"
 PRICE_MASTER_REQUIRED_COLUMNS = {
     "sku_part_number",

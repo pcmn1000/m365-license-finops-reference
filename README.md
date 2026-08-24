@@ -30,7 +30,7 @@ flowchart LR
     end
 
     subgraph INGEST["収集・制御"]
-        DELTA["Graph Delta<br/>15分マイクロバッチ"]
+        DELTA["Graph API / Delta<br/>日次同期・差分最適化"]
         DAILY["Usage Reports<br/>日次スナップショット"]
         SHORTCUT["OneLake Shortcut<br/>SPOファイルを参照"]
         PIPE["Fabric Data Pipeline<br/>検証・再実行・監視"]
@@ -68,15 +68,16 @@ flowchart LR
 
 | データ | 推奨取得方式 | 目標更新 | 実際の鮮度を決めるもの |
 | --- | --- | --- | --- |
-| ユーザー、部門、拠点、ライセンス割り当て | `users/delta` + 夜間全件照合 | 15分以内 | Graph の結果整合性、HR/Entra 更新 |
-| SKU購入数、消費数、サービスプラン | `subscribedSkus` | 1時間以内 | Microsoft 365 ライセンス処理 |
+| ユーザー、部門、拠点、ライセンス割り当て | `users`または`users/delta` + 全件照合 | 日次 | Graph の結果整合性、HR/Entra 更新 |
+| SKU購入数、消費数、サービスプラン | `subscribedSkus` | 日次 | Microsoft 365 ライセンス処理 |
 | M365サービス利用実績 | Graph Usage Reports | 日次 | Microsoft側のレポート生成 |
 | Copilot利用実績 | Copilot Usage Reports | 日次 | Microsoft側のレポート生成 |
 | 契約単価 | SPO Excel + Shortcut + 検証Notebook | 15分以内、またはイベント駆動 | ファイル承認、Pipeline実行 |
 | Power BI表示 | Direct Lake | Delta反映後、通常は数分以内 | モデルキャッシュ、容量状態 |
 
-「リアルタイム」は、割り当てや単価には準リアルタイムで適用できますが、Usage Reports
-には適用できません。レポートには必ず `source_refresh_date` と `ingested_at_utc` を表示します。
+「リアルタイム」は単価マスタの承認反映に限定し、ライセンスと組織属性は日次、
+Usage ReportsはMicrosoft側の更新周期に従います。レポートには必ず
+`source_refresh_date` と `ingested_at_utc` を表示します。
 
 ## ドキュメント
 
