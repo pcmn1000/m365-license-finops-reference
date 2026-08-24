@@ -180,7 +180,36 @@ table 'License Utilization'
 	measure 'Cost per Active User' = DIVIDE([Monthly Cost], [# Active Users], 0)
 		formatString: ¥#,##0
 		displayFolder: Cost
+	/// ユーザー一覧向けの利用状態。複数SKUを持つ場合は最も活発な状態を返す。
+	measure '利用状態' =
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			VAR _statuses =
+				CALCULATETABLE(
+					VALUES('License Utilization'[Utilization Status]),
+					KEEPFILTERS('License Utilization'[Snapshot Date] = _latestSnapshot)
+				)
+			RETURN
+				SWITCH(
+					TRUE(),
+					"Active" IN _statuses, "Active",
+					"LowUsage" IN _statuses, "LowUsage",
+					"Dormant" IN _statuses, "Dormant",
+					"DisabledAccount" IN _statuses, "DisabledAccount",
+					"NeverUsed" IN _statuses, "NeverUsed"
+				)
+		formatString: General
+		displayFolder: Users
 
+	/// ユーザー単位の最新の利用日。
+	measure '最終利用日' =
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			RETURN
+				CALCULATE(
+					MAX('License Utilization'[Last Activity Date]),
+					KEEPFILTERS('License Utilization'[Snapshot Date] = _latestSnapshot)
+				)
+		formatString: yyyy-MM-dd
+		displayFolder: Users
 	column 'Snapshot Date'
 		dataType: dateTime
 		formatString: yyyy-MM-dd

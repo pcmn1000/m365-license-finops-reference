@@ -5,7 +5,7 @@
     "x": 400,
     "y": 246,
     "z": 8000,
-    "height": 454,
+    "height": 214,
     "width": 856,
     "tabOrder": 8000
   },
@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'E5の高度機能とMicrosoft製品名'"
+                  "Value": "'E5の高度機能（行を選ぶと下のユーザー一覧が絞り込まれます）'"
                 }
               }
             },
@@ -415,10 +415,10 @@
                       "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "無効ユーザー数"
+                  "Property": "利用中ユーザー数"
                 }
               },
-              "queryRef": "Service Entitlement.無効ユーザー数"
+              "queryRef": "Service Entitlement.利用中ユーザー数"
             },
             {
               "field": {
@@ -428,10 +428,10 @@
                       "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "設定状況"
+                  "Property": "利用率"
                 }
               },
-              "queryRef": "Service Entitlement.設定状況"
+              "queryRef": "Service Entitlement.利用率"
             }
           ]
         }
@@ -446,7 +446,7 @@
                     "Entity": "Service Entitlement"
                   }
                 },
-                "Property": "無効ユーザー数"
+                "Property": "有効ユーザー数"
               }
             },
             "direction": "Descending"

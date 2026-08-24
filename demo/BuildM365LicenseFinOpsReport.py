@@ -607,6 +607,7 @@ def build_pages():
                     [
                         column("User", "Display Name", display_name="氏名"),
                         column("User", "Department", display_name="部門"),
+                        column("User", "Office Location", display_name="拠点"),
                         column("User", "Job Title", display_name="役職"),
                         measure("License Utilization", "# Assigned Seats", "割当数"),
                     ],
@@ -745,7 +746,7 @@ def build_pages():
                     24,
                     246,
                     360,
-                    454,
+                    214,
                     "機能カテゴリ別の確認対象数",
                     column("Service Plan", "カテゴリ", True),
                     [decision_capabilities],
@@ -756,8 +757,8 @@ def build_pages():
                     400,
                     246,
                     856,
-                    454,
-                    "E5の高度機能とMicrosoft製品名",
+                    214,
+                    "E5の高度機能（行を選ぶと下のユーザー一覧が絞り込まれます）",
                     [
                         column(
                             "Service Plan",
@@ -765,14 +766,27 @@ def build_pages():
                             display_name="機能名",
                         ),
                         reportable_enabled_users,
-                        reportable_disabled_users,
-                        measure(
-                            "Service Entitlement",
-                            "設定状況",
-                        ),
+                        measure("Service Entitlement", "利用中ユーザー数"),
+                        measure("Service Entitlement", "利用率"),
                     ],
-                    reportable_disabled_users,
+                    reportable_enabled_users,
                     word_wrap=True,
+                ),
+                table(
+                    "E5CapabilityUserDrilldown",
+                    24,
+                    476,
+                    1232,
+                    224,
+                    "選択中の機能の対象ユーザー",
+                    [
+                        column("User", "Display Name", display_name="氏名"),
+                        column("User", "Department", display_name="部門"),
+                        column("User", "Office Location", display_name="拠点"),
+                        measure("Service Entitlement", "機能の設定"),
+                        measure("License Utilization", "利用状態"),
+                        measure("License Utilization", "最終利用日"),
+                    ],
                 ),
             ],
             "visualInteractions": [
@@ -780,7 +794,17 @@ def build_pages():
                     "source": "CapabilityCategorySummary",
                     "target": "E5CapabilityDetails",
                     "type": "DataFilter",
-                }
+                },
+                {
+                    "source": "CapabilityCategorySummary",
+                    "target": "E5CapabilityUserDrilldown",
+                    "type": "DataFilter",
+                },
+                {
+                    "source": "E5CapabilityDetails",
+                    "target": "E5CapabilityUserDrilldown",
+                    "type": "DataFilter",
+                },
             ],
         },
         {

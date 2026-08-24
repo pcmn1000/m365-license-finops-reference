@@ -402,6 +402,20 @@
                       "Entity": "User"
                     }
                   },
+                  "Property": "Office Location"
+                }
+              },
+              "queryRef": "User.Office Location",
+              "displayName": "拠点"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "User"
+                    }
+                  },
                   "Property": "Job Title"
                 }
               },

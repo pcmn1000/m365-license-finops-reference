@@ -319,6 +319,76 @@ table 'Service Entitlement'
 		formatString: #,##0
 		displayFolder: E5 Review
 
+	/// 機能が有効なE5ユーザーのうち、直近30日にMicrosoft 365の利用実績があるユーザー数。
+	measure '利用中ユーザー数' = ```
+			VAR _isReportable =
+				SELECTEDVALUE('Service Plan'[レポート表示対象], FALSE())
+			VAR _latestSnapshot =
+				CALCULATE(
+					[Latest Entitlement Snapshot Date],
+					REMOVEFILTERS('Service Plan')
+				)
+			VAR _enabledUsers =
+				CALCULATETABLE(
+					VALUES('Service Entitlement'[User ID]),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+					KEEPFILTERS('Service Entitlement'[Is Enabled] = TRUE())
+				)
+			VAR _activeUsers =
+				CALCULATETABLE(
+					VALUES('License Utilization'[User ID]),
+					KEEPFILTERS('License Utilization'[Utilization Status] = "Active"),
+					REMOVEFILTERS('Service Plan')
+				)
+			RETURN
+				IF(
+					_isReportable,
+					COALESCE(COUNTROWS(INTERSECT(_enabledUsers, _activeUsers)), 0)
+				)
+			```
+		formatString: #,##0
+		displayFolder: E5 Review
+
+	/// 機能が有効なE5ユーザーに占める、直近30日の利用実績があるユーザーの割合。
+	measure '利用率' = ```
+			DIVIDE([利用中ユーザー数], [有効ユーザー数])
+			```
+		formatString: 0.0%
+		displayFolder: E5 Review
+
+	/// ユーザー一覧で、選択中の機能がそのユーザーに有効かどうかを示す。
+	measure '機能の設定' = ```
+			VAR _latestSnapshot =
+				CALCULATE(
+					[Latest Entitlement Snapshot Date],
+					REMOVEFILTERS('Service Plan')
+				)
+			VAR _enabledPlans =
+				CALCULATE(
+					COUNTROWS('Service Entitlement'),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+					KEEPFILTERS('Service Entitlement'[Is Enabled] = TRUE())
+				)
+			VAR _disabledPlans =
+				CALCULATE(
+					COUNTROWS('Service Entitlement'),
+					KEEPFILTERS('Service Entitlement'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License SKU'[SKU Part Number] = "Microsoft_365_E5_(no_Teams)"),
+					KEEPFILTERS('Service Entitlement'[Is Enabled] = FALSE())
+				)
+			RETURN
+				SWITCH(
+					TRUE(),
+					_enabledPlans + _disabledPlans = 0, BLANK(),
+					_disabledPlans > 0, "無効",
+					"有効"
+				)
+			```
+		formatString: General
+		displayFolder: E5 Review
+
 	/// 表示対象の業務機能について、E5ユーザーへの設定状況を日本語で示す。
 	measure '設定状況' = ```
 			VAR _isReportable =
