@@ -87,6 +87,7 @@ Usage ReportsはMicrosoft側の更新周期に従います。レポートには�
 - [人・部門・拠点・コストセンターの管理](docs/master-data.md)
 - [運用、監視、セキュリティ](docs/operations.md)
 - [デモ環境への反映](docs/demo-implementation.md)
+- [お客様説明用トークトラック](docs/customer-talk-track.md)
 
 ## 設計上の結論
 

@@ -82,6 +82,12 @@ PUBLIC_LIST_PRICES_JPY = {
     "MICROSOFT_365_COPILOT": Decimal("4497.00"),
     "MICROSOFT_TEAMS_ENTERPRISE_NEW": Decimal("1281.00"),
 }
+SKU_DISPLAY_NAMES = {
+    "M365_TEAMS_PREMIUM": "Microsoft Teams Premium (add-on)",
+    "MICROSOFT_365_E5_(NO_TEAMS)": "Microsoft 365 E5 (no Teams)",
+    "MICROSOFT_365_COPILOT": "Microsoft 365 Copilot",
+    "MICROSOFT_TEAMS_ENTERPRISE_NEW": "Microsoft Teams Enterprise (base license)",
+}
 
 
 def acquire_graph_token():
@@ -379,13 +385,17 @@ service_plan_by_id = {}
 sku_service_plan_rows = []
 for sku in subscribed_skus:
     sku_id = str(sku.get("skuId", "")).lower()
+    sku_part_number = sku.get("skuPartNumber")
     prepaid_units = sku.get("prepaidUnits") or {}
     purchased_units = int(prepaid_units.get("enabled") or 0)
     assigned_units = int(sku.get("consumedUnits") or 0)
     dim_sku_rows.append(
         {
             "sku_id": sku_id,
-            "sku_part_number": sku.get("skuPartNumber"),
+            "sku_part_number": sku_part_number,
+            "sku_display_name": SKU_DISPLAY_NAMES.get(
+                (sku_part_number or "").upper(), sku_part_number
+            ),
             "capability_status": sku.get("capabilityStatus"),
             "purchased_units": purchased_units,
             "assigned_units": assigned_units,
@@ -419,6 +429,7 @@ user_id_by_upn = {
     if row["user_principal_name"]
 }
 
+m365_report_names_concealed = False
 try:
     m365_report_rows = graph_csv_report(
         f"/reports/getOffice365ActiveUserDetail(period='{REPORT_PERIOD}')"
@@ -431,10 +442,8 @@ except requests.HTTPError as error:
 if m365_report_rows and not any(
     "@" in (row.get("user_principal_name") or "") for row in m365_report_rows
 ):
-    raise RuntimeError(
-        "Microsoft 365 usage report names are concealed. Disable concealed names in "
-        "Microsoft 365 admin center > Settings > Org settings > Services > Reports."
-    )
+    m365_report_names_concealed = True
+    m365_report_rows = []
 
 m365_usage_rows = []
 for row in m365_report_rows:
@@ -458,6 +467,7 @@ for row in m365_report_rows:
         }
     )
 
+copilot_report_names_concealed = False
 try:
     copilot_report_rows = graph_csv_report(
         f"/copilot/reports/getMicrosoft365CopilotUsageUserDetail(period='{REPORT_PERIOD}',version='v2')"
@@ -470,10 +480,8 @@ except requests.HTTPError as error:
 if copilot_report_rows and not any(
     "@" in (row.get("user_principal_name") or "") for row in copilot_report_rows
 ):
-    raise RuntimeError(
-        "Copilot usage report names are concealed. Disable concealed names in "
-        "Microsoft 365 admin center > Settings > Org settings > Services > Reports."
-    )
+    copilot_report_names_concealed = True
+    copilot_report_rows = []
 
 copilot_usage_rows = []
 for row in copilot_report_rows:
@@ -535,6 +543,7 @@ dim_sku_schema = StructType(
     [
         StructField("sku_id", StringType(), False),
         StructField("sku_part_number", StringType(), True),
+        StructField("sku_display_name", StringType(), True),
         StructField("capability_status", StringType(), True),
         StructField("purchased_units", IntegerType(), False),
         StructField("assigned_units", IntegerType(), False),
@@ -785,6 +794,8 @@ summary = {
     "license_assignments": len(license_assignment_rows),
     "m365_usage_rows": len(m365_usage_rows),
     "copilot_usage_rows": len(copilot_usage_rows),
+    "m365_report_names_concealed": m365_report_names_concealed,
+    "copilot_report_names_concealed": copilot_report_names_concealed,
     "service_plan_rows": len(dim_service_plan_rows),
     "service_entitlement_rows": len(service_entitlement_rows),
     "price_master": price_master_summary,

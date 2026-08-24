@@ -50,3 +50,19 @@ SPO管理フォルダー:
 - Microsoft 365/Copilot利用実績: 日次。ただしソース側レポート更新日に依存
 - 単価: SPO承認後に`SyncM365PriceMaster`を手動またはPower Automateから起動
 - 単価の定期照合: 日次Pipelineでも再確認
+
+`DailyM365LicenseSync`は毎日02:00、`Tokyo Standard Time`で有効です。
+
+## Usage Reportsの匿名化
+
+このデモテナントではMicrosoft 365 Usage Reportsのユーザー名が匿名化されています。
+匿名化されたレポートはUPNでユーザーへ結合できないため、Notebookは次の動作をします。
+
+- ライセンス在庫、ユーザー、組織属性、サービスプラン、単価は通常どおり更新
+- M365/Copilotのユーザー別Usage行は空として扱う
+- 実行結果へ`m365_report_names_concealed`と
+  `copilot_report_names_concealed`を出力
+- Power BIではUsageの鮮度/利用不可を表示し、0件を「未利用」と断定しない
+
+ユーザー別利用分析が必要な本番環境では、プライバシー責任者の承認、RLS、監査、
+保持期間を合意したうえでMicrosoft 365管理センターのレポート匿名化設定を変更します。

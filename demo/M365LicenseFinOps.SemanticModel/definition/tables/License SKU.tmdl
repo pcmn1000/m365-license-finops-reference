@@ -26,8 +26,16 @@ table 'License SKU'
 	/// Microsoft product code for the subscription SKU.
 	column 'SKU Part Number'
 		dataType: string
+		isHidden
+		isAvailableInMdx: false
 		summarizeBy: none
 		sourceColumn: sku_part_number
+
+	/// Friendly product name used in report slicers and labels.
+	column 'License Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sku_display_name
 
 	/// Current Microsoft 365 subscription capability state.
 	column 'Capability Status'
