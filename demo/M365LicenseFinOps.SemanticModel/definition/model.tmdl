@@ -1,0 +1,13 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	discourageImplicitMeasures
+
+ref table User
+ref table 'License SKU'
+ref table 'SKU Price'
+ref table 'License Utilization'
+ref table 'License Assignment'
+ref table 'M365 Usage'
+ref table 'Copilot Usage'

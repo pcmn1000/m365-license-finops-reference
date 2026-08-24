@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "description": "Runs the Microsoft 365 license and usage synchronization notebook.",
+    "activities": [
+      {
+        "name": "Sync Microsoft 365 License Usage",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 60,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "9624ea63-fa19-4d46-84bc-fed033962afd",
+          "workspaceId": "51a0788c-dc9c-4988-b43d-590d3d91bf8b"
+        }
+      }
+    ]
+  }
+}

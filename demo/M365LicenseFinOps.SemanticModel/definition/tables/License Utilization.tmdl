@@ -1,0 +1,241 @@
+/// Daily user-by-SKU utilization classification used for activity and optimization KPIs.
+table 'License Utilization'
+
+	/// Most recent available utilization snapshot, independent of report date filters.
+	measure 'Latest Snapshot Date' = ```
+			CALCULATE(
+				MAX('License Utilization'[Snapshot Date]),
+				REMOVEFILTERS('License Utilization'[Snapshot Date])
+			)
+			```
+		formatString: yyyy-MM-dd
+		displayFolder: Freshness
+
+	/// Assigned user-SKU combinations in the latest snapshot.
+	measure '# Assigned Seats' = ```
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			RETURN
+				CALCULATE(
+					COUNTROWS('License Utilization'),
+					KEEPFILTERS('License Utilization'[Snapshot Date] = _latestSnapshot)
+				)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Distinct licensed users in the latest snapshot.
+	measure '# Licensed Users' = ```
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			RETURN
+				CALCULATE(
+					DISTINCTCOUNT('License Utilization'[User ID]),
+					KEEPFILTERS('License Utilization'[Snapshot Date] = _latestSnapshot)
+				)
+			```
+		formatString: #,##0
+		displayFolder: Users
+
+	/// Assigned seats with activity in the last 30 days.
+	measure '# Active Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS('License Utilization'[Utilization Status] = "Active")
+				),
+				0
+			)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Assigned seats with last activity 31 to 89 days ago.
+	measure '# Low Usage Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS('License Utilization'[Utilization Status] = "LowUsage")
+				),
+				0
+			)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Assigned seats with no activity for 90 days or more.
+	measure '# Dormant Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS('License Utilization'[Utilization Status] = "Dormant")
+				),
+				0
+			)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Assigned seats for which no supported service activity has been recorded.
+	measure '# Never Used Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS('License Utilization'[Utilization Status] = "NeverUsed")
+				),
+				0
+			)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Assigned seats held by disabled Microsoft Entra accounts.
+	measure '# Disabled Account Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS('License Utilization'[Utilization Status] = "DisabledAccount")
+				),
+				0
+			)
+			```
+		formatString: #,##0
+		displayFolder: Seats
+
+	/// Distinct users with at least one active assigned SKU in the latest snapshot.
+	measure '# Active Users' = ```
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			RETURN
+				COALESCE(
+					CALCULATE(
+						DISTINCTCOUNT('License Utilization'[User ID]),
+						KEEPFILTERS('License Utilization'[Snapshot Date] = _latestSnapshot),
+						KEEPFILTERS('License Utilization'[Utilization Status] = "Active")
+					),
+					0
+				)
+			```
+		formatString: #,##0
+		displayFolder: Users
+
+	/// Share of latest assigned seats classified as active.
+	measure 'Active Rate' = DIVIDE([# Active Seats], [# Assigned Seats], 0)
+		formatString: 0.0%
+		displayFolder: Rates
+
+	/// Latest assigned seats that are dormant, never used, or held by disabled accounts.
+	measure '# Recoverable Seats' = ```
+			COALESCE(
+				CALCULATE(
+					[# Assigned Seats],
+					KEEPFILTERS(
+						'License Utilization'[Utilization Status]
+							IN { "Dormant", "NeverUsed", "DisabledAccount" }
+					)
+				),
+				0
+				)
+			```
+		formatString: #,##0
+		displayFolder: Optimization
+
+	/// Estimated monthly cost for all assigned seats using the configured unit price.
+	measure 'Monthly Cost' = ```
+			VAR _latestSnapshot = [Latest Snapshot Date]
+			RETURN
+				SUMX(
+					FILTER(
+						'License Utilization',
+						'License Utilization'[Snapshot Date] = _latestSnapshot
+					),
+					RELATED('SKU Price'[Monthly Unit Price])
+				)
+			```
+		formatString: ¥#,##0
+		displayFolder: Cost
+
+	/// Estimated monthly cost of assigned seats active in the last 30 days.
+	measure 'Active Cost' = ```
+			CALCULATE(
+				[Monthly Cost],
+				KEEPFILTERS('License Utilization'[Utilization Status] = "Active")
+			)
+			```
+		formatString: ¥#,##0
+		displayFolder: Cost
+
+	/// Estimated monthly cost of assigned seats with no activity for 90 days or more.
+	measure 'Dormant Cost' = ```
+			CALCULATE(
+				[Monthly Cost],
+				KEEPFILTERS('License Utilization'[Utilization Status] = "Dormant")
+			)
+			```
+		formatString: ¥#,##0
+		displayFolder: Cost
+
+	/// Estimated monthly cost recoverable from dormant, never-used, and disabled-account seats.
+	measure 'Recoverable Cost' = ```
+			CALCULATE(
+				[Monthly Cost],
+				KEEPFILTERS(
+					'License Utilization'[Utilization Status]
+						IN { "Dormant", "NeverUsed", "DisabledAccount" }
+				)
+			)
+			```
+		formatString: ¥#,##0
+		displayFolder: Optimization
+
+	/// Recoverable monthly cost as a share of total monthly assigned cost.
+	measure 'Recoverable Cost Rate' = DIVIDE([Recoverable Cost], [Monthly Cost], 0)
+		formatString: 0.0%
+		displayFolder: Optimization
+
+	/// Estimated monthly assigned cost divided by distinct active users.
+	measure 'Cost per Active User' = DIVIDE([Monthly Cost], [# Active Users], 0)
+		formatString: ¥#,##0
+		displayFolder: Cost
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	column 'User ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_id
+
+	column 'SKU ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: sku_id
+
+	/// Last supported service activity date used for classification.
+	column 'Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: last_activity_date
+
+	/// Days since the last supported service activity at snapshot time.
+	column 'Inactive Days'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: inactive_days
+
+	/// Active, LowUsage, Dormant, NeverUsed, or DisabledAccount classification.
+	column 'Utilization Status'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: utilization_status
+
+	partition 'License Utilization' = entity
+		mode: directLake
+		source
+			entityName: fact_license_utilization
+			expressionSource: 'DirectLake - M365LicenseFinOps'

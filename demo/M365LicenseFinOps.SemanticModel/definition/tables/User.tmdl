@@ -1,0 +1,72 @@
+/// Current Microsoft 365 user attributes used to analyze license utilization by organization.
+table User
+
+	/// Stable Microsoft Entra user identifier.
+	column 'User ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_id
+
+	/// Sign-in name used by Microsoft 365 services.
+	column 'User Principal Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: user_principal_name
+
+	/// User name shown in reports.
+	column 'Display Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: display_name
+
+	/// Department recorded in Microsoft Entra ID; missing values are grouped as Unassigned.
+	column Department
+		dataType: string
+		summarizeBy: none
+		sourceColumn: department
+
+	/// Job title recorded in Microsoft Entra ID.
+	column 'Job Title'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: job_title
+
+	/// Company recorded in Microsoft Entra ID.
+	column Company
+		dataType: string
+		summarizeBy: none
+		sourceColumn: company_name
+
+	/// Office location recorded in Microsoft Entra ID.
+	column 'Office Location'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: office_location
+
+	/// Whether the Microsoft Entra account can sign in.
+	column 'Account Enabled'
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: account_enabled
+
+	/// Microsoft Entra member or guest classification.
+	column 'User Type'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: user_type
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		isHidden
+		isAvailableInMdx: false
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	partition User = entity
+		mode: directLake
+		source
+			entityName: dim_user
+			expressionSource: 'DirectLake - M365LicenseFinOps'

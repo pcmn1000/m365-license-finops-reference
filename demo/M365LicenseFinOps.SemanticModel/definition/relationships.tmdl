@@ -1,0 +1,27 @@
+relationship 'License Utilization to User'
+	fromColumn: 'License Utilization'.'User ID'
+	toColumn: User.'User ID'
+
+relationship 'License Utilization to License SKU'
+	fromColumn: 'License Utilization'.'SKU ID'
+	toColumn: 'License SKU'.'SKU ID'
+
+relationship 'License Utilization to SKU Price'
+	fromColumn: 'License Utilization'.'SKU ID'
+	toColumn: 'SKU Price'.'SKU ID'
+
+relationship 'License Assignment to User'
+	fromColumn: 'License Assignment'.'User ID'
+	toColumn: User.'User ID'
+
+relationship 'License Assignment to License SKU'
+	fromColumn: 'License Assignment'.'SKU ID'
+	toColumn: 'License SKU'.'SKU ID'
+
+relationship 'M365 Usage to User'
+	fromColumn: 'M365 Usage'.'User ID'
+	toColumn: User.'User ID'
+
+relationship 'Copilot Usage to User'
+	fromColumn: 'Copilot Usage'.'User ID'
+	toColumn: User.'User ID'

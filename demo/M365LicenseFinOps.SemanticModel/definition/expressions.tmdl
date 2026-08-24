@@ -1,0 +1,5 @@
+expression 'DirectLake - M365LicenseFinOps' =
+		let
+			Source = AzureStorage.DataLake("https://onelake.dfs.fabric.microsoft.com/51a0788c-dc9c-4988-b43d-590d3d91bf8b/b0a7d28f-558b-4238-8b8e-268d6c886ac1", [HierarchicalNavigation=true])
+		in
+			Source

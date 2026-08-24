@@ -1,0 +1,71 @@
+/// Current Microsoft 365 subscription inventory by stock keeping unit (SKU).
+table 'License SKU'
+
+	/// Number of seats purchased for the selected SKUs.
+	measure '# Purchased Seats' = SUM('License SKU'[Purchased Units])
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Number of seats assigned according to the tenant subscription inventory.
+	measure '# Inventory Assigned Seats' = SUM('License SKU'[Assigned Units])
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Number of purchased seats currently available for assignment.
+	measure '# Available Seats' = SUM('License SKU'[Available Units])
+		formatString: #,##0
+		displayFolder: Inventory
+
+	column 'SKU ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: sku_id
+
+	/// Microsoft product code for the subscription SKU.
+	column 'SKU Part Number'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sku_part_number
+
+	/// Current Microsoft 365 subscription capability state.
+	column 'Capability Status'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: capability_status
+
+	column 'Purchased Units'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: purchased_units
+
+	column 'Assigned Units'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: assigned_units
+
+	column 'Available Units'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: available_units
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		isHidden
+		isAvailableInMdx: false
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	partition 'License SKU' = entity
+		mode: directLake
+		source
+			entityName: dim_sku
+			expressionSource: 'DirectLake - M365LicenseFinOps'

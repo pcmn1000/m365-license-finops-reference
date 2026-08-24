@@ -1,0 +1,105 @@
+/// Per-user Microsoft 365 service activity reported by Microsoft Graph.
+table 'M365 Usage'
+
+	/// Latest Microsoft 365 usage snapshot available to the model.
+	measure 'Latest M365 Snapshot Date' = ```
+			CALCULATE(
+				MAX('M365 Usage'[Snapshot Date]),
+				REMOVEFILTERS('M365 Usage'[Snapshot Date])
+			)
+			```
+		formatString: yyyy-MM-dd
+		displayFolder: Freshness
+
+	/// Users with any supported Microsoft 365 service activity in the latest snapshot.
+	measure '# M365 Users with Activity' = ```
+			VAR _latestSnapshot = [Latest M365 Snapshot Date]
+			RETURN
+				COALESCE(
+					CALCULATE(
+						DISTINCTCOUNT('M365 Usage'[User ID]),
+						KEEPFILTERS('M365 Usage'[Snapshot Date] = _latestSnapshot),
+						KEEPFILTERS(NOT ISBLANK('M365 Usage'[Overall Last Activity Date]))
+					),
+					0
+				)
+			```
+		formatString: #,##0
+		displayFolder: Activity
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	/// Refresh date supplied by the Microsoft 365 usage report.
+	column 'Report Refresh Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: report_refresh_date
+
+	column 'User ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_id
+
+	column 'User Principal Name'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_principal_name
+
+	/// Most recent activity across Exchange, OneDrive, SharePoint, and Teams.
+	column 'Overall Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: overall_last_activity_date
+
+	column 'Exchange Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: exchange_last_activity_date
+
+	column 'OneDrive Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: onedrive_last_activity_date
+
+	column 'SharePoint Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: sharepoint_last_activity_date
+
+	column 'Teams Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: teams_last_activity_date
+
+	/// Product labels supplied by the Microsoft 365 usage report.
+	column 'Assigned Products'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: assigned_products
+
+	column 'Report Period Days'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: report_period
+
+	partition 'M365 Usage' = entity
+		mode: directLake
+		source
+			entityName: fact_m365_usage
+			expressionSource: 'DirectLake - M365LicenseFinOps'

@@ -1,0 +1,41 @@
+/// Monthly unit prices used to convert assigned seats into estimated license cost.
+table 'SKU Price'
+
+	column 'SKU ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: sku_id
+
+	/// Price per assigned seat per month; public list price is used until a contract price is configured.
+	column 'Monthly Unit Price'
+		dataType: decimal
+		formatString: ¥#,##0.00
+		summarizeBy: none
+		sourceColumn: unit_price_monthly
+
+	/// ISO currency code for the configured price.
+	column Currency
+		dataType: string
+		summarizeBy: none
+		sourceColumn: currency
+
+	/// Origin of the unit price, such as Microsoft public list price or customer contract price.
+	column 'Price Source'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: price_source
+
+	/// Date from which the configured contract price applies.
+	column 'Effective From'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: effective_from
+
+	partition 'SKU Price' = entity
+		mode: directLake
+		source
+			entityName: dim_sku_price
+			expressionSource: 'DirectLake - M365LicenseFinOps'

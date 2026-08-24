@@ -1,0 +1,121 @@
+/// Per-user Microsoft 365 Copilot activity and prompt counts reported by Microsoft Graph.
+table 'Copilot Usage'
+
+	/// Latest Copilot usage snapshot available to the model.
+	measure 'Latest Copilot Snapshot Date' = ```
+			CALCULATE(
+				MAX('Copilot Usage'[Snapshot Date]),
+				REMOVEFILTERS('Copilot Usage'[Snapshot Date])
+			)
+			```
+		formatString: yyyy-MM-dd
+		displayFolder: Freshness
+
+	/// Users with recorded Copilot activity in the latest snapshot.
+	measure '# Copilot Active Users' = ```
+			VAR _latestSnapshot = [Latest Copilot Snapshot Date]
+			RETURN
+				COALESCE(
+					CALCULATE(
+						DISTINCTCOUNT('Copilot Usage'[User ID]),
+						KEEPFILTERS('Copilot Usage'[Snapshot Date] = _latestSnapshot),
+						KEEPFILTERS(NOT ISBLANK('Copilot Usage'[Last Activity Date]))
+					),
+					0
+				)
+			```
+		formatString: #,##0
+		displayFolder: Activity
+
+	/// Prompts submitted across supported Copilot applications in the latest snapshot.
+	measure '# Copilot Prompts' = ```
+			VAR _latestSnapshot = [Latest Copilot Snapshot Date]
+			RETURN
+				COALESCE(
+					CALCULATE(
+						SUM('Copilot Usage'[Prompts Any App]),
+						KEEPFILTERS('Copilot Usage'[Snapshot Date] = _latestSnapshot)
+					),
+					0
+				)
+			```
+		formatString: #,##0
+		displayFolder: Prompts
+
+	/// Average prompt count per user with recorded Copilot activity.
+	measure 'Prompts per Active Copilot User' = DIVIDE([# Copilot Prompts], [# Copilot Active Users], 0)
+		formatString: #,##0.0
+		displayFolder: Prompts
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	column 'Report Refresh Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: report_refresh_date
+
+	column 'User ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_id
+
+	column 'User Principal Name'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_principal_name
+
+	/// Most recent Microsoft 365 Copilot activity date for the user.
+	column 'Last Activity Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: last_activity_date
+
+	column 'Prompts Any App'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: prompts_any_app
+
+	column 'Prompts Work'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: prompts_work
+
+	column 'Prompts Web'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: prompts_web
+
+	/// Number of days with recorded Copilot activity during the report period.
+	column 'Active Usage Days'
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: active_usage_days
+
+	column 'Report Period Days'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: report_period
+
+	partition 'Copilot Usage' = entity
+		mode: directLake
+		source
+			entityName: fact_copilot_usage
+			expressionSource: 'DirectLake - M365LicenseFinOps'

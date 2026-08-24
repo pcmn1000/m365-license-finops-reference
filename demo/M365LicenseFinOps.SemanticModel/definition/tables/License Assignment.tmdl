@@ -1,0 +1,90 @@
+/// Daily user-to-SKU assignment state and assignment source from Microsoft Entra ID.
+table 'License Assignment'
+
+	/// Latest assignment snapshot available to the model.
+	measure 'Latest Assignment Snapshot Date' = ```
+			CALCULATE(
+				MAX('License Assignment'[Snapshot Date]),
+				REMOVEFILTERS('License Assignment'[Snapshot Date])
+			)
+			```
+		formatString: yyyy-MM-dd
+		displayFolder: Freshness
+
+	/// Direct license assignments in the latest snapshot.
+	measure '# Direct Assignments' = ```
+			VAR _latestSnapshot = [Latest Assignment Snapshot Date]
+			RETURN
+				CALCULATE(
+					COUNTROWS('License Assignment'),
+					KEEPFILTERS('License Assignment'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License Assignment'[Assignment Source] = "Direct")
+				)
+			```
+		formatString: #,##0
+		displayFolder: Assignment
+
+	/// Group-based license assignments in the latest snapshot.
+	measure '# Group Assignments' = ```
+			VAR _latestSnapshot = [Latest Assignment Snapshot Date]
+			RETURN
+				CALCULATE(
+					COUNTROWS('License Assignment'),
+					KEEPFILTERS('License Assignment'[Snapshot Date] = _latestSnapshot),
+					KEEPFILTERS('License Assignment'[Assignment Source] = "Group")
+				)
+			```
+		formatString: #,##0
+		displayFolder: Assignment
+
+	column 'Snapshot Date'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: snapshot_date
+
+	column 'User ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: user_id
+
+	column 'SKU ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: sku_id
+
+	/// Microsoft Entra assignment state for the user-SKU combination.
+	column 'Assignment State'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: assignment_state
+
+	/// Direct or group-based license assignment.
+	column 'Assignment Source'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: assignment_source
+
+	column 'Assigned by Group ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		summarizeBy: none
+		sourceColumn: assigned_by_group
+
+	/// Last time Microsoft Entra updated the assignment state.
+	column 'Last Updated Date Time'
+		dataType: dateTime
+		formatString: yyyy-MM-dd HH:mm
+		summarizeBy: none
+		sourceColumn: last_updated_datetime
+
+	partition 'License Assignment' = entity
+		mode: directLake
+		source
+			entityName: fact_license_assignment
+			expressionSource: 'DirectLake - M365LicenseFinOps'
