@@ -704,10 +704,6 @@ def build_pages():
                     "M365 License FinOps",
                     "E5の高度機能が誰に有効かを確認",
                 ),
-                section_header("E5UsersHeader", 24, 290, "E5対象ユーザー"),
-                section_header("E5CapabilitiesHeader", 328, 290, "高度機能"),
-                section_header("FullyEnabledHeader", 632, 290, "全員有効"),
-                section_header("ReviewRequiredHeader", 936, 320, "無効設定あり"),
                 card(
                     "E5AssignedUsers",
                     24,
