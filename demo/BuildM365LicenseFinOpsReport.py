@@ -394,7 +394,7 @@ def bar_chart(name, x, y, width, height, title, category, values, sort_measure=N
     )
 
 
-def table(name, x, y, width, height, title, values, sort_measure=None):
+def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap=False):
     sort = None
     if sort_measure:
         sort = {"field": sort_measure["field"], "direction": "Descending"}
@@ -433,6 +433,9 @@ def table(name, x, y, width, height, title, values, sort_measure=None):
         "total": [{"properties": {"totals": literal("false")}}],
         "visualHeader": [{"properties": {"show": literal("false")}}],
     }
+    if word_wrap:
+        objects["columnHeaders"][0]["properties"]["wordWrap"] = literal("true")
+        objects["values"][0]["properties"]["wordWrap"] = literal("true")
     return visual_container(
         name,
         "tableEx",
@@ -689,14 +692,13 @@ def build_pages():
                     330,
                     856,
                     370,
-                    "E5の高度機能と対象ユーザー",
+                    "E5の高度機能とMicrosoft製品名",
                     [
                         column(
                             "Service Plan",
                             "機能名",
                             display_name="機能名",
                         ),
-                        column("Service Plan", "カテゴリ", display_name="カテゴリ"),
                         reportable_enabled_users,
                         reportable_disabled_users,
                         measure(
@@ -705,6 +707,7 @@ def build_pages():
                         ),
                     ],
                     reportable_disabled_users,
+                    word_wrap=True,
                 ),
             ],
             "visualInteractions": [

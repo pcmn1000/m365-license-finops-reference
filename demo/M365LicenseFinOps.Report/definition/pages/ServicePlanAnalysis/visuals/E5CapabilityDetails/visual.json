@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'E5の高度機能と対象ユーザー'"
+                  "Value": "'E5の高度機能とMicrosoft製品名'"
                 }
               }
             },
@@ -180,6 +180,13 @@
                   }
                 }
               }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }
@@ -267,6 +274,13 @@
                   }
                 }
               }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }
@@ -315,20 +329,6 @@
               },
               "queryRef": "Service Plan.機能名",
               "nativeQueryRef": "機能名"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Service Plan"
-                    }
-                  },
-                  "Property": "カテゴリ"
-                }
-              },
-              "queryRef": "Service Plan.カテゴリ",
-              "nativeQueryRef": "カテゴリ"
             },
             {
               "field": {
