@@ -13,16 +13,20 @@ VISUAL_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report
 PBIR_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json"
 
 COLORS = {
-    "ink": "#17181C",
-    "muted": "#666A73",
-    "canvas": "#FFFFFF",
-    "surface": "#F7F7FA",
-    "section": "#EAF1FF",
-    "line": "#E4E6EC",
-    "brand": "#1026B8",
-    "brand_light": "#CBD5F4",
-    "warning_surface": "#FFF6D8",
-    "warning_ink": "#6A4B00",
+    "ink": "#132330",
+    "muted": "#607080",
+    "canvas": "#EAF1F7",
+    "surface": "#F8FBFF",
+    "surface_alt": "#EEF6FA",
+    "section": "#DFF1F4",
+    "line": "#C8D8E5",
+    "glass_edge": "#FFFFFF",
+    "shadow": "#45637A",
+    "brand": "#1769AA",
+    "brand_dark": "#0C4A6E",
+    "brand_light": "#BFD9F2",
+    "accent": "#0E9F9A",
+    "accent_soft": "#BFE8E4",
     "white": "#FFFFFF",
 }
 
@@ -43,6 +47,22 @@ def solid_color(value):
     return {"solid": {"color": literal(f"'{value}'")}}
 
 
+def glass_shadow():
+    return [
+        {
+            "properties": {
+                "show": literal("true"),
+                "color": solid_color(COLORS["shadow"]),
+                "transparency": literal("90D"),
+                "shadowSpread": literal("0D"),
+                "shadowBlur": literal("12D"),
+                "angle": literal("45D"),
+                "shadowDistance": literal("2D"),
+            }
+        }
+    ]
+
+
 def title_objects(title):
     return {
         "title": [
@@ -50,9 +70,9 @@ def title_objects(title):
                 "properties": {
                     "show": literal("true"),
                     "text": literal(f"'{title}'"),
-                    "fontSize": literal("11D"),
+                    "fontSize": literal("12D"),
                     "fontFamily": literal("'Segoe UI Semibold'"),
-                    "fontColor": solid_color(COLORS["ink"]),
+                    "fontColor": solid_color(COLORS["brand_dark"]),
                     "bold": literal("true"),
                 }
             }
@@ -62,7 +82,7 @@ def title_objects(title):
                 "properties": {
                     "show": literal("true"),
                     "color": solid_color(COLORS["surface"]),
-                    "transparency": literal("0D"),
+                    "transparency": literal("8D"),
                 }
             }
         ],
@@ -70,12 +90,13 @@ def title_objects(title):
             {
                 "properties": {
                     "show": literal("true"),
-                    "color": solid_color(COLORS["line"]),
-                    "radius": literal("12D"),
+                    "color": solid_color(COLORS["glass_edge"]),
+                    "radius": literal("18D"),
+                    "width": literal("1D"),
                 }
             }
         ],
-        "dropShadow": [{"properties": {"show": literal("false")}}],
+        "dropShadow": glass_shadow(),
     }
 
 
@@ -92,7 +113,7 @@ def field(entity, property_name, field_type, active=None, display_name=None):
     if active is not None:
         projection["active"] = active
     if display_name:
-        projection["nativeQueryRef"] = display_name
+        projection["displayName"] = display_name
     return projection
 
 
@@ -145,7 +166,20 @@ def visual_container(
     }
 
 
-def textbox(name, x, y, width, height, text, font_size=20, background=None, color=None):
+def textbox(
+    name,
+    x,
+    y,
+    width,
+    height,
+    text,
+    font_size=20,
+    background=None,
+    color=None,
+    transparency=10,
+    radius=18,
+    shadow=True,
+):
     background = background or COLORS["canvas"]
     color = color or COLORS["ink"]
     container_objects = {
@@ -154,7 +188,7 @@ def textbox(name, x, y, width, height, text, font_size=20, background=None, colo
                 "properties": {
                     "show": literal("true"),
                     "color": solid_color(background),
-                    "transparency": literal("0D"),
+                    "transparency": literal(f"{transparency}D"),
                 }
             }
         ],
@@ -162,20 +196,21 @@ def textbox(name, x, y, width, height, text, font_size=20, background=None, colo
             {
                 "properties": {
                     "show": literal("true"),
-                    "color": solid_color(background),
-                    "radius": literal("12D"),
+                    "color": solid_color(COLORS["glass_edge"]),
+                    "radius": literal(f"{radius}D"),
+                    "width": literal("1D"),
                 }
             }
         ],
-        "dropShadow": [{"properties": {"show": literal("false")}}],
+        "dropShadow": glass_shadow() if shadow else [{"properties": {"show": literal("false")}}],
         "visualHeader": [{"properties": {"show": literal("false")}}],
         "padding": [
             {
                 "properties": {
                     "top": literal("0D"),
                     "bottom": literal("0D"),
-                    "left": literal("0D"),
-                    "right": literal("0D"),
+                    "left": literal("12D"),
+                    "right": literal("12D"),
                 }
             }
         ],
@@ -217,11 +252,52 @@ def textbox(name, x, y, width, height, text, font_size=20, background=None, colo
 
 
 def page_header(name, title, subtitle):
-    return textbox(name, 24, 14, 1232, 48, f"{title} | {subtitle}", 22)
+    return textbox(
+        name,
+        24,
+        14,
+        1232,
+        48,
+        f"{title}  /  {subtitle}",
+        22,
+        COLORS["surface"],
+        COLORS["ink"],
+        5,
+        20,
+    )
 
 
 def section_header(name, x, width, title):
-    return textbox(name, x, 72, width, 48, title, 17, COLORS["section"], COLORS["brand"])
+    return textbox(
+        name,
+        x,
+        72,
+        width,
+        48,
+        title,
+        16,
+        COLORS["section"],
+        COLORS["brand_dark"],
+        22,
+        16,
+    )
+
+
+def canvas_backdrop(name):
+    return textbox(
+        name,
+        0,
+        0,
+        1280,
+        720,
+        "",
+        1,
+        COLORS["canvas"],
+        COLORS["canvas"],
+        0,
+        0,
+        False,
+    )
 
 
 def card(name, x, y, width, title, entity, measure_name, height=148):
@@ -240,8 +316,8 @@ def card(name, x, y, width, title, entity, measure_name, height=148):
         "value": [
             {
                 "properties": {
-                    "fontSize": literal("22D"),
-                    "fontFamily": literal("'Segoe UI'"),
+                    "fontSize": literal("24D"),
+                    "fontFamily": literal("'Segoe UI Semibold'"),
                     "horizontalAlignment": literal("'left'"),
                     "fontColor": solid_color(COLORS["ink"]),
                 },
@@ -258,7 +334,7 @@ def card(name, x, y, width, title, entity, measure_name, height=148):
             {
                 "properties": {
                     "tileShape": literal("'rectangleRounded'"),
-                    "rectangleRoundedCurve": literal("12L"),
+                    "rectangleRoundedCurve": literal("18L"),
                 },
                 "selector": {"id": "default"},
             }
@@ -268,7 +344,7 @@ def card(name, x, y, width, title, entity, measure_name, height=148):
                 "properties": {"show": literal("true")},
             },
             {
-                "properties": {"fillColor": solid_color(COLORS["surface"])},
+                "properties": {"fillColor": solid_color(COLORS["surface_alt"])},
                 "selector": {"id": "default"},
             }
         ],
@@ -319,7 +395,7 @@ def slicer(name, x, y, width, title, selection):
                     "fontFamily": literal("'Segoe UI'"),
                     "textSize": literal("13D"),
                     "fontColor": solid_color(COLORS["ink"]),
-                    "background": solid_color(COLORS["surface"]),
+                    "background": solid_color(COLORS["surface_alt"]),
                 }
             }
         ],
@@ -368,7 +444,7 @@ def bar_chart(name, x, y, width, height, title, category, values, sort_measure=N
                 }
             }
         ],
-        "dataPoint": [{"properties": {"fill": solid_color(COLORS["brand"])}}],
+        "dataPoint": [{"properties": {"fill": solid_color(COLORS["accent"])}}],
         "labels": [
             {
                 "properties": {
@@ -405,7 +481,7 @@ def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap
                     "fontFamily": literal("'Segoe UI Semibold'"),
                     "fontSize": literal("10D"),
                     "fontColor": solid_color(COLORS["ink"]),
-                    "backColor": solid_color(COLORS["section"]),
+                    "backColor": solid_color(COLORS["accent_soft"]),
                 }
             }
         ],
@@ -427,6 +503,7 @@ def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap
                     "fontSize": literal("10D"),
                     "fontColorPrimary": solid_color(COLORS["ink"]),
                     "backColorPrimary": solid_color(COLORS["surface"]),
+                    "backColorSecondary": solid_color(COLORS["surface_alt"]),
                 }
             }
         ],
@@ -469,6 +546,7 @@ def build_pages():
             "name": "ExecutiveSummary",
             "displayName": "エグゼクティブ サマリー",
             "visuals": [
+                canvas_backdrop("ExecutiveBackdrop"),
                 page_header("ExecutiveHeader", "M365 License FinOps", "ライセンス運用サマリー"),
                 section_header("LicenseFilterHeader", 24, 290, "対象ライセンス"),
                 section_header("LocationFilterHeader", 328, 290, "対象拠点"),
@@ -547,6 +625,7 @@ def build_pages():
             "name": "DepartmentComparison",
             "displayName": "部門比較",
             "visuals": [
+                canvas_backdrop("DepartmentBackdrop"),
                 page_header("DepartmentHeader", "M365 License FinOps", "部門別の利用効率"),
                 section_header("DepartmentUsersHeader", 24, 290, "ライセンス"),
                 section_header("DepartmentActiveHeader", 328, 290, "利用状況"),
@@ -619,6 +698,7 @@ def build_pages():
             "name": "ServicePlanAnalysis",
             "displayName": "E5機能チェック",
             "visuals": [
+                canvas_backdrop("ServicePlanBackdrop"),
                 page_header(
                     "ServicePlanHeader",
                     "M365 License FinOps",
@@ -664,23 +744,12 @@ def build_pages():
                     "Service Entitlement",
                     "# E5 Capabilities Requiring Review",
                 ),
-                textbox(
-                    "E5AssessmentCaveat",
-                    24,
-                    286,
-                    1232,
-                    32,
-                    "有効はライセンス設定です。実際の利用、セキュリティ・コンプライアンスポリシー、業務要件を確認してE3/E5を判断します。",
-                    12,
-                    COLORS["warning_surface"],
-                    COLORS["warning_ink"],
-                ),
                 bar_chart(
                     "CapabilityCategorySummary",
                     24,
-                    330,
+                    296,
                     360,
-                    370,
+                    404,
                     "機能カテゴリ別の確認対象数",
                     column("Service Plan", "カテゴリ", True),
                     [decision_capabilities],
@@ -689,9 +758,9 @@ def build_pages():
                 table(
                     "E5CapabilityDetails",
                     400,
-                    330,
+                    296,
                     856,
-                    370,
+                    404,
                     "E5の高度機能とMicrosoft製品名",
                     [
                         column(
@@ -722,6 +791,7 @@ def build_pages():
             "name": "UserAndCopilot",
             "displayName": "ユーザー・Copilot詳細",
             "visuals": [
+                canvas_backdrop("CopilotBackdrop"),
                 page_header("CopilotHeader", "M365 License FinOps", "ユーザー・Copilot利用状況"),
                 section_header("CopilotUsersHeader", 24, 290, "Copilot利用者"),
                 section_header("CopilotPromptsHeader", 328, 290, "プロンプト"),

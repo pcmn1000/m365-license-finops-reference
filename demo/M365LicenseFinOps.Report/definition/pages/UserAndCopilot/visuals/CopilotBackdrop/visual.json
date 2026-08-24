@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "E5UsersHeader",
+  "name": "CopilotBackdrop",
   "position": {
-    "x": 24,
-    "y": 72,
-    "z": 3000,
-    "height": 48,
-    "width": 290,
-    "tabOrder": 3000
+    "x": 0,
+    "y": 0,
+    "z": 1000,
+    "height": 720,
+    "width": 1280,
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "textbox",
@@ -27,7 +27,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#DFF1F4'"
+                      "Value": "'#EAF1F7'"
                     }
                   }
                 }
@@ -36,7 +36,7 @@
             "transparency": {
               "expr": {
                 "Literal": {
-                  "Value": "22D"
+                  "Value": "0D"
                 }
               }
             }
@@ -67,7 +67,7 @@
             "radius": {
               "expr": {
                 "Literal": {
-                  "Value": "16D"
+                  "Value": "0D"
                 }
               }
             },
@@ -87,53 +87,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "color": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#45637A'"
-                    }
-                  }
-                }
-              }
-            },
-            "transparency": {
-              "expr": {
-                "Literal": {
-                  "Value": "90D"
-                }
-              }
-            },
-            "shadowSpread": {
-              "expr": {
-                "Literal": {
-                  "Value": "0D"
-                }
-              }
-            },
-            "shadowBlur": {
-              "expr": {
-                "Literal": {
-                  "Value": "12D"
-                }
-              }
-            },
-            "angle": {
-              "expr": {
-                "Literal": {
-                  "Value": "45D"
-                }
-              }
-            },
-            "shadowDistance": {
-              "expr": {
-                "Literal": {
-                  "Value": "2D"
+                  "Value": "false"
                 }
               }
             }
@@ -197,11 +151,11 @@
               {
                 "textRuns": [
                   {
-                    "value": "E5対象ユーザー",
+                    "value": "",
                     "textStyle": {
                       "fontFamily": "Segoe UI Semibold",
-                      "fontSize": "16px",
-                      "color": "#0C4A6E"
+                      "fontSize": "1px",
+                      "color": "#EAF1F7"
                     }
                   }
                 ],
