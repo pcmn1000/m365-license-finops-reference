@@ -15,6 +15,7 @@
 | SPO site | `M365 License FinOps Data` |
 | Fabric connection | `M365FinOpsSPO admin` (`673c247a-7b90-4865-b78b-a703191d7515`) |
 | OneLake Shortcut | `Files/reference/sharepoint-license-prices` |
+| Data Agent | `M365LicenseFinOpsAgent` |
 
 Lakehouse の Delta テーブルは10本で、Bronze/Silver/Gold のような層は作っていません。
 

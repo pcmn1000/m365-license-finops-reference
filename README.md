@@ -4,8 +4,8 @@ Microsoft 365 のライセンス在庫、ユーザー割り当て、サービス
 Microsoft Fabric に統合し、Power BI から分析する構成です。
 
 **動くものと、その作り方を丸ごと共有するためのリポジトリです。**
-Notebook のソース、セマンティックモデルの TMDL、レポートの PBIR、Pipeline の定義、
-環境固有IDを置換してFabricへ配置するスクリプトが入っています。
+Notebook のソース、セマンティックモデルの TMDL、レポートの PBIR、Data Agent、
+Pipeline の定義、環境固有IDを置換してFabricへ配置するスクリプトが入っています。
 [構築手順](docs/setup.md) に沿えば、自分のテナントに同じものを作れます。
 
 この構成は次の問いに答えます。
@@ -45,12 +45,14 @@ flowchart LR
 
     subgraph USE["利用"]
         PBI["Power BI レポート<br/>4ページ"]
+        AGENT["Fabric Data Agent<br/>自然言語Q&A"]
     end
 
     GRAPH --> NB1 --> LH
     SPO --> SC --> NB2 --> LH
     PIPE --> NB1
     LH --> MODEL --> PBI
+    MODEL --> AGENT
 ```
 
 ### 作ったもの
@@ -63,6 +65,7 @@ flowchart LR
 | Pipeline | `DailyM365LicenseSync` | Notebookを日次実行 |
 | Semantic model | `M365 License FinOps Model` | Direct Lake |
 | Report | `M365 License FinOps Report` | 4ページ / 34ビジュアル |
+| Data Agent | `M365LicenseFinOpsAgent` | 在庫、割り当て、利用、コスト、E5機能を自然言語で照会 |
 
 Fabric 容量は F8 (Japan East) です。Graph のアプリケーション権限は
 `User.Read.All`、`LicenseAssignment.Read.All`、`Organization.Read.All`、
@@ -134,6 +137,7 @@ Pipeline も後回しにして、まず手動実行で構いません。
 | `demo/BuildM365LicenseFinOpsReport.py` | PBIRレポートを生成するスクリプト |
 | `demo/M365LicenseFinOps.SemanticModel/` | Direct LakeモデルのTMDL一式 |
 | `demo/M365LicenseFinOps.Report/` | レポートのPBIR一式 |
+| `demo/M365LicenseFinOps.DataAgent/` | Data Agentの指示、データソース選択、few-shot |
 | `demo/pipeline-content.json` | 日次Pipelineの定義 |
 | `tools/deploy_fabric_items.ps1` | 環境IDを置換し、Fabricアイテムを作成・更新するスクリプト |
 | `tools/create_price_master.py` | 単価マスタExcelの生成スクリプト |

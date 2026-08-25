@@ -1,7 +1,7 @@
 # 構築手順
 
 このリポジトリのファイルを使って、現在の構成を自分のテナントに作る手順です。
-Notebook、セマンティックモデル、レポート、Pipeline はスクリプトで配置します。
+Notebook、セマンティックモデル、レポート、Data Agent、Pipeline はスクリプトで配置します。
 
 単価管理が不要なら SharePoint と価格同期 Notebook は省略できます。
 
@@ -83,7 +83,8 @@ pwsh -File .\tools\deploy_fabric_items.ps1 `
 2. Notebook を実行して Lakehouse の10テーブルを作成・更新
 3. TMDL の OneLake 接続先を置換してセマンティックモデルを作成・更新
 4. PBIR のセマンティックモデル ID を置換してレポートを作成・更新
-5. Notebook ID を置換して `DailyM365LicenseSync` Pipeline を作成・更新
+5. Data Agent のセマンティックモデル ID を置換して作成・更新
+6. Notebook ID を置換して `DailyM365LicenseSync` Pipeline を作成・更新
 
 同名アイテムが既にあれば更新し、なければ作成します。リポジトリ内のソースファイルは
 書き換えません。初回の Notebook 実行を省略する場合だけ `-SkipNotebookRun` を付けます。
@@ -171,6 +172,8 @@ py -3.12 .\demo\BuildM365LicenseFinOpsReport.py <semantic-model-id>
 - `割当ユーザー一覧` に実在のユーザーが並ぶ
 - `E5機能チェック` の機能名を展開すると品番が出る
 - 月額コストが 0 になっていない（単価が引けている）
+- Data Agentで「E5の機能名とサービスプラン品番の対応を見せて」と質問できる
+- Data Agentが機能の有効化を実利用と断定しない
 
 ## つまずきやすいところ
 

@@ -1,0 +1,886 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataSource/1.0.0/schema.json",
+  "artifactId": "291d34fc-3e56-457a-9355-9a349a2f47c0",
+  "workspaceId": "51a0788c-dc9c-4988-b43d-590d3d91bf8b",
+  "dataSourceInstructions": "Use this semantic model for all tenant-specific Microsoft 365 license answers.\r\n\r\nUse existing measures instead of raw aggregations. Latest-snapshot measures already apply the newest snapshot; do not add another snapshot filter unless the user explicitly asks for history.\r\n\r\nInventory and assignments:\r\n- Use 'License SKU'[License Name] for normal product names. Use [SKU Part Number] only when the user asks for the API or admin-center SKU code.\r\n- Use [# Purchased Seats], [# Inventory Assigned Seats], and [# Available Seats] for subscription inventory.\r\n- Use [# Direct Assignments] and [# Group Assignments] for assignment source.\r\n- Microsoft Teams Premium is an add-on and Microsoft Teams Enterprise is a base license. Never treat them as substitutes.\r\n\r\nCost and pricing:\r\n- Costs are monthly Japanese yen. Format them with the yen sign and thousands separators.\r\n- [Monthly Cost] uses the configured unit price for every assigned seat.\r\n- Check 'SKU Price'[Price Source] before describing a cost as contractual. Public-list-price costs are estimates.\r\n\r\nOrganization and users:\r\n- Use 'User'[Department], [Office Location], [Company], [Country], [City], [Division], or [Cost Center] for breakdowns.\r\n- Missing organization values are stored as Unassigned.\r\n- For one-row-per-user answers, use the [利用状態] and [最終利用日] measures rather than raw utilization columns.\r\n\r\nE5 capabilities and service plans:\r\n- Use 'Service Plan'[機能名] as the business-friendly capability name and [サービスプラン品番] as the raw Microsoft Graph/admin-center plan code.\r\n- One capability can map to multiple service-plan codes. Preserve that hierarchy when the user asks for mapping details.\r\n- [有効ユーザー数] and [無効ユーザー数] describe license configuration derived from assignedLicenses.disabledPlans.\r\n- [機能の設定] returns 有効 only when all internal plans that compose the selected capability are enabled for that user; one disabled internal plan makes it 無効.\r\n- Enabled does not mean used. [利用中ユーザー数] counts enabled users who had any supported Microsoft 365 activity within 30 days; it is not feature-specific usage evidence. State this limitation whenever discussing capability usage.\r\n\r\nUtilization and Copilot:\r\n- Active means activity within 30 days, LowUsage means 31-89 days, Dormant means 90+ days, NeverUsed means no activity record, and DisabledAccount means sign-in blocked.\r\n- A Copilot prompt count of 0 is a measured zero, not missing data.\r\n\r\nAnswer only what was asked. Do not invent policy coverage, security telemetry, feature-specific usage, or license removal/downgrade recommendations. Answer in the language of the question and identify data limitations when they affect the conclusion.",
+  "displayName": "M365 License FinOps Model",
+  "type": "semantic_model",
+  "userDescription": "Microsoft 365 license inventory, assignments, usage, cost, price source, and E5 capability configuration.",
+  "metadata": null,
+  "elements": [
+    {
+      "id": "9a805a12-0bfe-57c1-8093-2f0bc5c3e2f3",
+      "is_selected": true,
+      "display_name": "User",
+      "type": "semantic_model.table",
+      "description": "Current Microsoft 365 user attributes used to analyze license utilization by organization.",
+      "children": [
+        {
+          "id": "23079aa2-9a9d-5432-a28a-7ca7ad7d688e",
+          "is_selected": true,
+          "display_name": "User Principal Name",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Sign-in name used by Microsoft 365 services.",
+          "children": []
+        },
+        {
+          "id": "12b424f2-e861-5652-80e5-8928b268515d",
+          "is_selected": true,
+          "display_name": "Display Name",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "User name shown in reports.",
+          "children": []
+        },
+        {
+          "id": "657fb217-1c89-54a2-b39b-901a980f5d82",
+          "is_selected": true,
+          "display_name": "Department",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Department recorded in Microsoft Entra ID; missing values are grouped as Unassigned.",
+          "children": []
+        },
+        {
+          "id": "f2ea8d99-4cee-5c8c-b8b1-db1c7066d8be",
+          "is_selected": true,
+          "display_name": "Job Title",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Job title recorded in Microsoft Entra ID.",
+          "children": []
+        },
+        {
+          "id": "9b4df3e9-28d8-5c76-9d26-4a6ba51a9e2b",
+          "is_selected": true,
+          "display_name": "Company",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Company recorded in Microsoft Entra ID.",
+          "children": []
+        },
+        {
+          "id": "828630d1-e6d4-5143-9e2e-a3eac0e1041e",
+          "is_selected": true,
+          "display_name": "Office Location",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Office location recorded in Microsoft Entra ID.",
+          "children": []
+        },
+        {
+          "id": "084b8216-01e0-5868-99e2-6e8e769cce7d",
+          "is_selected": true,
+          "display_name": "Account Enabled",
+          "type": "semantic_model.column",
+          "data_type": "True/False",
+          "description": "Whether the Microsoft Entra account can sign in.",
+          "children": []
+        },
+        {
+          "id": "a99c5c8d-a51c-553a-a285-0a7bbfebf7a1",
+          "is_selected": true,
+          "display_name": "User Type",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Microsoft Entra member or guest classification.",
+          "children": []
+        },
+        {
+          "id": "6124ed2c-4809-49c7-a58d-4df2210c0824",
+          "is_selected": true,
+          "display_name": "Country",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Country recorded in Microsoft Entra ID.",
+          "children": []
+        },
+        {
+          "id": "613fd926-e609-45f8-b53c-9e5f4a21d1ea",
+          "is_selected": true,
+          "display_name": "City",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "City recorded in Microsoft Entra ID.",
+          "children": []
+        },
+        {
+          "id": "06d1ba02-402b-46ea-8c39-a69d8966f77a",
+          "is_selected": true,
+          "display_name": "Division",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Business division from Microsoft Entra employee organization data.",
+          "children": []
+        },
+        {
+          "id": "c6e0f9da-f502-4419-b1c2-ffa6ef4b5c39",
+          "is_selected": true,
+          "display_name": "Cost Center",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Cost center from Microsoft Entra employee organization data.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cdac7d8e-7c85-5857-89d5-16950b9280a0",
+      "is_selected": true,
+      "display_name": "License SKU",
+      "type": "semantic_model.table",
+      "description": "Current Microsoft 365 subscription inventory by stock keeping unit (SKU).",
+      "children": [
+        {
+          "id": "3d602008-fe24-51f7-a3d3-b3cb1274a481",
+          "is_selected": true,
+          "display_name": "Capability Status",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Current Microsoft 365 subscription capability state.",
+          "children": []
+        },
+        {
+          "id": "3e76fb95-560a-5408-98ee-fe9874658a58",
+          "is_selected": true,
+          "display_name": "License Name",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Business-friendly license name; distinguishes base products from add-ons.",
+          "children": []
+        },
+        {
+          "id": "7603f972-5075-559b-912c-3fc06fd1c975",
+          "is_selected": true,
+          "display_name": "# Purchased Seats",
+          "type": "semantic_model.measure",
+          "description": "Number of seats purchased for the selected SKUs.",
+          "children": []
+        },
+        {
+          "id": "ac26fad8-c7fe-58cf-9914-456fff2915c2",
+          "is_selected": true,
+          "display_name": "# Inventory Assigned Seats",
+          "type": "semantic_model.measure",
+          "description": "Number of seats assigned according to the tenant subscription inventory.",
+          "children": []
+        },
+        {
+          "id": "0e82ed2a-02b0-5bf4-884b-ccb0523ca4d2",
+          "is_selected": true,
+          "display_name": "# Available Seats",
+          "type": "semantic_model.measure",
+          "description": "Number of purchased seats currently available for assignment.",
+          "children": []
+        },
+        {
+          "id": "86da01ed-1fc9-418a-a7cc-00dd5a20e841",
+          "is_selected": true,
+          "display_name": "SKU Part Number",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Raw Microsoft Graph SKU code used for price and administration mappings.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "8b117a2e-6a7f-5972-bd75-14c32400fc2e",
+      "is_selected": true,
+      "display_name": "SKU Price",
+      "type": "semantic_model.table",
+      "description": "Monthly unit prices used to convert assigned seats into estimated license cost.",
+      "children": [
+        {
+          "id": "3c6efd4f-be1a-593b-be70-201779739988",
+          "is_selected": true,
+          "display_name": "Monthly Unit Price",
+          "type": "semantic_model.column",
+          "data_type": "Currency",
+          "description": "Price per assigned seat per month; public list price is used until a contract price is configured.",
+          "children": []
+        },
+        {
+          "id": "ba194a20-e258-5253-aeb8-a12712470686",
+          "is_selected": true,
+          "display_name": "Currency",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "ISO currency code for the configured price.",
+          "children": []
+        },
+        {
+          "id": "6953f3f5-00fb-5508-9f18-a1993af8ab49",
+          "is_selected": true,
+          "display_name": "Price Source",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Origin of the unit price, such as Microsoft public list price or customer contract price.",
+          "children": []
+        },
+        {
+          "id": "2dd6fdee-e577-574d-8de7-05032cc3ba33",
+          "is_selected": true,
+          "display_name": "Effective From",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Date from which the configured contract price applies.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "0a3a4f57-1a47-5453-ae4a-7b50cc19632f",
+      "is_selected": true,
+      "display_name": "License Utilization",
+      "type": "semantic_model.table",
+      "description": "Daily user-by-SKU utilization classification used for activity and optimization KPIs.",
+      "children": [
+        {
+          "id": "bdef6835-dcc0-5115-9a83-0274b6462a07",
+          "is_selected": true,
+          "display_name": "Snapshot Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "ccca9b15-cd77-5efc-a414-9a211b0c6e3e",
+          "is_selected": true,
+          "display_name": "Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Last supported service activity date used for classification.",
+          "children": []
+        },
+        {
+          "id": "8285c875-43f5-5a54-88ad-2fd414d7349d",
+          "is_selected": true,
+          "display_name": "Inactive Days",
+          "type": "semantic_model.column",
+          "data_type": "Integer",
+          "description": "Days since the last supported service activity at snapshot time.",
+          "children": []
+        },
+        {
+          "id": "78a91961-72f9-5f44-b81e-dc19fc016390",
+          "is_selected": true,
+          "display_name": "Utilization Status",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Active, LowUsage, Dormant, NeverUsed, or DisabledAccount classification.",
+          "children": []
+        },
+        {
+          "id": "aa8971d4-70db-599d-81ec-0a84898557cd",
+          "is_selected": true,
+          "display_name": "Latest Snapshot Date",
+          "type": "semantic_model.measure",
+          "description": "Most recent available utilization snapshot, independent of report date filters.",
+          "children": []
+        },
+        {
+          "id": "fb7139ef-6aa7-5d0b-b4af-6323973ac674",
+          "is_selected": true,
+          "display_name": "# Assigned Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned user-SKU combinations in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "ad74b52e-7f74-5195-8471-b0fd2fef1d4f",
+          "is_selected": true,
+          "display_name": "# Licensed Users",
+          "type": "semantic_model.measure",
+          "description": "Distinct licensed users in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "b15f5aec-fc8e-5485-be51-e1dcf1447670",
+          "is_selected": true,
+          "display_name": "# Active Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned seats with activity in the last 30 days.",
+          "children": []
+        },
+        {
+          "id": "10b5f8bb-2add-5759-af8b-fb04b99bdd6b",
+          "is_selected": true,
+          "display_name": "# Low Usage Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned seats with last activity 31 to 89 days ago.",
+          "children": []
+        },
+        {
+          "id": "e0831ba7-d139-5f67-bad0-9dc3ea5b99cf",
+          "is_selected": true,
+          "display_name": "# Dormant Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned seats with no activity for 90 days or more.",
+          "children": []
+        },
+        {
+          "id": "df5bf052-dea6-5063-a205-453a3b6cc61a",
+          "is_selected": true,
+          "display_name": "# Never Used Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned seats for which no supported service activity has been recorded.",
+          "children": []
+        },
+        {
+          "id": "c89bee9d-837f-5f7f-8d69-2ca6f0bb354e",
+          "is_selected": true,
+          "display_name": "# Disabled Account Seats",
+          "type": "semantic_model.measure",
+          "description": "Assigned seats held by disabled Microsoft Entra accounts.",
+          "children": []
+        },
+        {
+          "id": "4f133273-a857-56c4-88e8-5c4460342cbb",
+          "is_selected": true,
+          "display_name": "# Active Users",
+          "type": "semantic_model.measure",
+          "description": "Distinct users with at least one active assigned SKU in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "97f8df0b-0094-54af-b71b-6786601c9dfd",
+          "is_selected": true,
+          "display_name": "Active Rate",
+          "type": "semantic_model.measure",
+          "description": "Share of latest assigned seats classified as active.",
+          "children": []
+        },
+        {
+          "id": "4a5c8637-eb9a-54c4-a1fa-ce2841bb27cc",
+          "is_selected": true,
+          "display_name": "# Recoverable Seats",
+          "type": "semantic_model.measure",
+          "description": "Latest assigned seats that are dormant, never used, or held by disabled accounts.",
+          "children": []
+        },
+        {
+          "id": "39370122-e28a-5a8e-a820-49b71d7fe73e",
+          "is_selected": true,
+          "display_name": "Monthly Cost",
+          "type": "semantic_model.measure",
+          "description": "Estimated monthly cost for all assigned seats using the configured unit price.",
+          "children": []
+        },
+        {
+          "id": "07a6cb9b-0083-5232-b0bf-862d9234e080",
+          "is_selected": true,
+          "display_name": "Active Cost",
+          "type": "semantic_model.measure",
+          "description": "Estimated monthly cost of assigned seats active in the last 30 days.",
+          "children": []
+        },
+        {
+          "id": "112627fa-87ae-5599-af5f-4b93c5aaa8fc",
+          "is_selected": true,
+          "display_name": "Dormant Cost",
+          "type": "semantic_model.measure",
+          "description": "Estimated monthly cost of assigned seats with no activity for 90 days or more.",
+          "children": []
+        },
+        {
+          "id": "5194c31c-dba0-5c3c-abfa-25ac9d0ce55e",
+          "is_selected": true,
+          "display_name": "Recoverable Cost",
+          "type": "semantic_model.measure",
+          "description": "Estimated monthly cost recoverable from dormant, never-used, and disabled-account seats.",
+          "children": []
+        },
+        {
+          "id": "bc06066f-c2cb-5448-9d44-f7f3b4383983",
+          "is_selected": true,
+          "display_name": "Recoverable Cost Rate",
+          "type": "semantic_model.measure",
+          "description": "Recoverable monthly cost as a share of total monthly assigned cost.",
+          "children": []
+        },
+        {
+          "id": "3394cf9b-1624-5ff6-b2aa-c56436d6fe32",
+          "is_selected": true,
+          "display_name": "Cost per Active User",
+          "type": "semantic_model.measure",
+          "description": "Estimated monthly assigned cost divided by distinct active users.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "1e6b320e-3744-5409-a39b-54e8973b1788",
+      "is_selected": true,
+      "display_name": "License Assignment",
+      "type": "semantic_model.table",
+      "description": "Daily user-to-SKU assignment state and assignment source from Microsoft Entra ID.",
+      "children": [
+        {
+          "id": "9b9fb6cc-d642-5b3d-b004-45124e565bbb",
+          "is_selected": true,
+          "display_name": "Snapshot Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "110b17ab-edf4-571e-963e-da7fd38101f4",
+          "is_selected": true,
+          "display_name": "Assignment State",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Microsoft Entra assignment state for the user-SKU combination.",
+          "children": []
+        },
+        {
+          "id": "c89f8551-f1e9-5e47-9696-d06a9706ee2c",
+          "is_selected": true,
+          "display_name": "Assignment Source",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Direct or group-based license assignment.",
+          "children": []
+        },
+        {
+          "id": "a2d4bac0-e6c2-5837-b9c8-a11edc132c78",
+          "is_selected": true,
+          "display_name": "Last Updated Date Time",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Last time Microsoft Entra updated the assignment state.",
+          "children": []
+        },
+        {
+          "id": "a51430f5-960e-52a7-9995-2623975aea3e",
+          "is_selected": true,
+          "display_name": "Latest Assignment Snapshot Date",
+          "type": "semantic_model.measure",
+          "description": "Latest assignment snapshot available to the model.",
+          "children": []
+        },
+        {
+          "id": "2c4c7c56-a54e-51ab-8776-d8333b76ad13",
+          "is_selected": true,
+          "display_name": "# Direct Assignments",
+          "type": "semantic_model.measure",
+          "description": "Direct license assignments in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "0d5c960a-a40e-5fa7-bdd1-f62320dd21a1",
+          "is_selected": true,
+          "display_name": "# Group Assignments",
+          "type": "semantic_model.measure",
+          "description": "Group-based license assignments in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "88031c4b-8e28-5792-aa2b-86ee75fc0ba3",
+          "is_selected": true,
+          "display_name": "# Latest Assignments",
+          "type": "semantic_model.measure",
+          "description": "User-SKU license assignments in the latest snapshot.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "da153180-41d2-5c22-809a-fbc0dc77b341",
+      "is_selected": true,
+      "display_name": "M365 Usage",
+      "type": "semantic_model.table",
+      "description": "Per-user Microsoft 365 service activity reported by Microsoft Graph.",
+      "children": [
+        {
+          "id": "92a62983-f3e4-54d8-8ac8-e56952d98171",
+          "is_selected": true,
+          "display_name": "Snapshot Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "b21c571e-37c7-551a-9d17-533e49cb63f2",
+          "is_selected": true,
+          "display_name": "Report Refresh Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Refresh date supplied by the Microsoft 365 usage report.",
+          "children": []
+        },
+        {
+          "id": "6d95bb72-6a8e-5d16-9953-1a924a835008",
+          "is_selected": true,
+          "display_name": "Overall Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Most recent activity across Exchange, OneDrive, SharePoint, and Teams.",
+          "children": []
+        },
+        {
+          "id": "c79f0d1b-45b2-5eef-ae93-e7024ee36720",
+          "is_selected": true,
+          "display_name": "Exchange Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "c6f34d62-d18b-5efc-a6f9-8962b0c11081",
+          "is_selected": true,
+          "display_name": "OneDrive Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "f4525bd2-f54c-597a-aa2e-bb7bfd8ed2c4",
+          "is_selected": true,
+          "display_name": "SharePoint Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "7be6baf0-51f4-5a47-a66b-44ccc11ddbb3",
+          "is_selected": true,
+          "display_name": "Teams Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "484f4fdd-fdcd-532e-8e45-d32cc03b465b",
+          "is_selected": true,
+          "display_name": "Assigned Products",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Product labels supplied by the Microsoft 365 usage report.",
+          "children": []
+        },
+        {
+          "id": "f082acf0-7d1f-5aa5-bfe3-c747d815e9db",
+          "is_selected": true,
+          "display_name": "Latest M365 Snapshot Date",
+          "type": "semantic_model.measure",
+          "description": "Latest Microsoft 365 usage snapshot available to the model.",
+          "children": []
+        },
+        {
+          "id": "0d8b883c-699d-5aca-a0cc-d2f180773114",
+          "is_selected": true,
+          "display_name": "# M365 Users with Activity",
+          "type": "semantic_model.measure",
+          "description": "Users with any supported Microsoft 365 service activity in the latest snapshot.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "374773af-0527-5378-83ba-a235f739290b",
+      "is_selected": true,
+      "display_name": "Copilot Usage",
+      "type": "semantic_model.table",
+      "description": "Per-user Microsoft 365 Copilot activity and prompt counts reported by Microsoft Graph.",
+      "children": [
+        {
+          "id": "4a22f8a8-f7aa-5f21-957f-57ce3c1ea62f",
+          "is_selected": true,
+          "display_name": "Snapshot Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "b12171aa-6bf3-50e3-b83d-3bcade4e948b",
+          "is_selected": true,
+          "display_name": "Report Refresh Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": null,
+          "children": []
+        },
+        {
+          "id": "3fb352f9-89fd-5f8e-83ce-aa91e357ed9d",
+          "is_selected": true,
+          "display_name": "Last Activity Date",
+          "type": "semantic_model.column",
+          "data_type": "Date",
+          "description": "Most recent Microsoft 365 Copilot activity date for the user.",
+          "children": []
+        },
+        {
+          "id": "0b180a97-028f-55dc-807a-1b85447baffb",
+          "is_selected": true,
+          "display_name": "Active Usage Days",
+          "type": "semantic_model.column",
+          "data_type": "Integer",
+          "description": "Number of days with recorded Copilot activity during the report period.",
+          "children": []
+        },
+        {
+          "id": "747a1b98-e4ac-5d9e-9134-d09d74b2f2e3",
+          "is_selected": true,
+          "display_name": "Latest Copilot Snapshot Date",
+          "type": "semantic_model.measure",
+          "description": "Latest Copilot usage snapshot available to the model.",
+          "children": []
+        },
+        {
+          "id": "2647d542-0ddc-5621-9536-021508158f55",
+          "is_selected": true,
+          "display_name": "# Copilot Active Users",
+          "type": "semantic_model.measure",
+          "description": "Users with recorded Copilot activity in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "fb2c091d-095b-556d-b715-7842796346c0",
+          "is_selected": true,
+          "display_name": "# Copilot Prompts",
+          "type": "semantic_model.measure",
+          "description": "Prompts submitted across supported Copilot applications in the latest snapshot.",
+          "children": []
+        },
+        {
+          "id": "7caccb72-9f43-5be4-b481-ea4f6c0c7c3f",
+          "is_selected": true,
+          "display_name": "Prompts per Active Copilot User",
+          "type": "semantic_model.measure",
+          "description": "Average prompt count per user with recorded Copilot activity.",
+          "children": []
+        },
+        {
+          "id": "4ef7e5f5-3537-415b-8b04-206e5b50f561",
+          "is_selected": true,
+          "display_name": "Prompts Any App",
+          "type": "semantic_model.column",
+          "data_type": "Integer",
+          "description": "Prompts submitted across supported Copilot applications.",
+          "children": []
+        },
+        {
+          "id": "6ffb76c1-2e26-4b12-9310-d5be0e77c218",
+          "is_selected": true,
+          "display_name": "Prompts Work",
+          "type": "semantic_model.column",
+          "data_type": "Integer",
+          "description": "Prompts submitted to Copilot Chat in work mode.",
+          "children": []
+        },
+        {
+          "id": "0fe57577-b966-4c45-8fcb-0a91c8cd7af4",
+          "is_selected": true,
+          "display_name": "Prompts Web",
+          "type": "semantic_model.column",
+          "data_type": "Integer",
+          "description": "Prompts submitted to Copilot Chat in web mode.",
+          "children": []
+        },
+        {
+          "id": "1809a234-78c5-4e27-94d0-b81093c062d3",
+          "is_selected": true,
+          "display_name": "プロンプト数",
+          "type": "semantic_model.measure",
+          "description": "Prompt count for licensed users; unlicensed users return blank.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "7e6e6591-4e9d-48a4-bb4f-9150d6cb6671",
+      "is_selected": true,
+      "display_name": "Service Plan",
+      "type": "semantic_model.table",
+      "description": "Business-friendly E5 capability catalog mapped to raw Microsoft Graph service plan codes.",
+      "children": [
+        {
+          "id": "e6cf43a9-1fc0-4d71-9ac5-157826cc127d",
+          "is_selected": true,
+          "display_name": "サービスプラン品番",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Raw service-plan code used by Microsoft Graph and the admin center.",
+          "children": []
+        },
+        {
+          "id": "0fc73549-320f-42e2-b7cb-3c6dc8e33e25",
+          "is_selected": true,
+          "display_name": "機能名",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Business-friendly capability name that can group multiple raw service-plan codes.",
+          "children": []
+        },
+        {
+          "id": "357441c9-076d-464c-8a6e-863f7f855942",
+          "is_selected": true,
+          "display_name": "カテゴリ",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Capability category such as identity, security, information protection, legal/audit, meetings, or analytics.",
+          "children": []
+        },
+        {
+          "id": "d17d6d40-43b9-4171-b6fa-787c4ac58167",
+          "is_selected": true,
+          "display_name": "判断区分",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Current report scope classification for the capability.",
+          "children": []
+        },
+        {
+          "id": "3f2a9482-c792-46cf-8fae-275ef8b6ccdd",
+          "is_selected": true,
+          "display_name": "確認ポイント",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Facts to verify before interpreting the capability configuration.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "f250ad50-0486-4bf0-b008-5b3e89b92260",
+      "is_selected": true,
+      "display_name": "Service Entitlement",
+      "type": "semantic_model.table",
+      "description": "Latest user-by-service-plan configuration and E5 capability measures.",
+      "children": [
+        {
+          "id": "f173bd8c-d7fa-4ad0-b7ba-e52457242c35",
+          "is_selected": true,
+          "display_name": "Is Enabled",
+          "type": "semantic_model.column",
+          "data_type": "True/False",
+          "description": "Whether the raw plan is enabled for the user assignment.",
+          "children": []
+        },
+        {
+          "id": "18eeb03e-41a7-43e7-ad34-a63c8018fd84",
+          "is_selected": true,
+          "display_name": "SKU Provisioning Status",
+          "type": "semantic_model.column",
+          "data_type": "Text",
+          "description": "Provisioning status reported for the plan in the subscribed SKU.",
+          "children": []
+        },
+        {
+          "id": "ee8053d2-3f79-4b74-9618-adc07d664479",
+          "is_selected": true,
+          "display_name": "# E5 Assigned Users",
+          "type": "semantic_model.measure",
+          "description": "Distinct users assigned Microsoft 365 E5 (no Teams) in the latest entitlement snapshot.",
+          "children": []
+        },
+        {
+          "id": "e64c2c12-f1fb-4762-be1a-1d77cb046dae",
+          "is_selected": true,
+          "display_name": "# E5 Capability Target Users",
+          "type": "semantic_model.measure",
+          "description": "E5 users entitled to the selected business capability.",
+          "children": []
+        },
+        {
+          "id": "625e72e8-dbf8-4544-bccb-eb2ab8565fe4",
+          "is_selected": true,
+          "display_name": "# E5 Capability Enabled Users",
+          "type": "semantic_model.measure",
+          "description": "E5 users for whom all internal plans in the selected capability are enabled.",
+          "children": []
+        },
+        {
+          "id": "1131b179-eb9e-4938-aef1-6affa6b4481f",
+          "is_selected": true,
+          "display_name": "# E5 Capability Disabled Users",
+          "type": "semantic_model.measure",
+          "description": "E5 users with at least one disabled internal plan in the selected capability.",
+          "children": []
+        },
+        {
+          "id": "2b26c6be-0091-4dc8-827d-792b8098e362",
+          "is_selected": true,
+          "display_name": "# E5 Decision Capabilities",
+          "type": "semantic_model.measure",
+          "description": "Number of business capabilities shown in the E5 capability review.",
+          "children": []
+        },
+        {
+          "id": "e3701971-3809-4e41-b5b2-0df43a028560",
+          "is_selected": true,
+          "display_name": "# E5 Fully Enabled Capabilities",
+          "type": "semantic_model.measure",
+          "description": "Capabilities enabled for all target E5 users.",
+          "children": []
+        },
+        {
+          "id": "cb11226a-083e-4833-b118-1897482ec8b0",
+          "is_selected": true,
+          "display_name": "# E5 Capabilities Requiring Review",
+          "type": "semantic_model.measure",
+          "description": "Capabilities disabled for one or more target E5 users.",
+          "children": []
+        },
+        {
+          "id": "297845ec-7174-4f33-b938-c7f891742c7f",
+          "is_selected": true,
+          "display_name": "有効ユーザー数",
+          "type": "semantic_model.measure",
+          "description": "Target E5 users whose internal plans for the selected reportable capability are all enabled.",
+          "children": []
+        },
+        {
+          "id": "612521cc-7f46-46e5-bf2f-7c523cb5aceb",
+          "is_selected": true,
+          "display_name": "無効ユーザー数",
+          "type": "semantic_model.measure",
+          "description": "Target E5 users with one or more disabled internal plans for the selected capability.",
+          "children": []
+        },
+        {
+          "id": "c653de57-cf82-4d35-9a05-fb8af61a7def",
+          "is_selected": true,
+          "display_name": "利用中ユーザー数",
+          "type": "semantic_model.measure",
+          "description": "Enabled users with any supported Microsoft 365 activity in the last 30 days; not capability-specific usage.",
+          "children": []
+        },
+        {
+          "id": "ceef8dfd-2b2a-4d99-b8ba-421fdfa2fea4",
+          "is_selected": true,
+          "display_name": "利用率",
+          "type": "semantic_model.measure",
+          "description": "Share of enabled users with any supported Microsoft 365 activity in the last 30 days.",
+          "children": []
+        },
+        {
+          "id": "6d583e47-96bc-49fc-a391-97bbdd221aa9",
+          "is_selected": true,
+          "display_name": "機能の設定",
+          "type": "semantic_model.measure",
+          "description": "Per-user capability configuration: 有効 when every component plan is enabled, otherwise 無効.",
+          "children": []
+        },
+        {
+          "id": "9bc7bdf8-b071-423b-b2ae-18e9458cb6f1",
+          "is_selected": true,
+          "display_name": "設定状況",
+          "type": "semantic_model.measure",
+          "description": "Capability-level configuration summary across target E5 users.",
+          "children": []
+        }
+      ]
+    }
+  ]
+}

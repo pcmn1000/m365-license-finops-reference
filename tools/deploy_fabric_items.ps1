@@ -156,20 +156,25 @@ function Set-FabricItem {
     param(
         [Parameter(Mandatory)][string]$Type,
         [Parameter(Mandatory)][string]$DisplayName,
-        [Parameter(Mandatory)][array]$Parts
+        [Parameter(Mandatory)][array]$Parts,
+        [string]$Description
     )
 
     $item = Get-FabricItem -Type $Type -DisplayName $DisplayName
     if ($null -eq $item) {
         Write-Host "Creating $Type '$DisplayName'..."
+        $createBody = @{
+            displayName = $DisplayName
+            type = $Type
+            definition = @{ parts = $Parts }
+        }
+        if ($Description) {
+            $createBody.description = $Description
+        }
         Invoke-FabricDefinitionRequest `
             -Method Post `
             -Uri "$fabricBaseUrl/workspaces/$WorkspaceId/items" `
-            -Body @{
-                displayName = $DisplayName
-                type = $Type
-                definition = @{ parts = $Parts }
-            }
+            -Body $createBody
 
         for ($attempt = 0; $attempt -lt 30; $attempt++) {
             $item = Get-FabricItem -Type $Type -DisplayName $DisplayName
@@ -188,6 +193,20 @@ function Set-FabricItem {
             -Method Post `
             -Uri "$fabricBaseUrl/workspaces/$WorkspaceId/items/$($item.id)/updateDefinition" `
             -Body @{ definition = @{ parts = $Parts } }
+    }
+
+    if ($Description) {
+        $metadataJson = @{
+            displayName = $DisplayName
+            description = $Description
+        } | ConvertTo-Json -Compress
+        Invoke-RestMethod `
+            -Method Patch `
+            -Uri "$fabricBaseUrl/workspaces/$WorkspaceId/items/$($item.id)" `
+            -Headers $headers `
+            -ContentType 'application/json; charset=utf-8' `
+            -Body $utf8NoBom.GetBytes($metadataJson) |
+            Out-Null
     }
 
     return $item
@@ -305,6 +324,25 @@ $reportParts = Get-DirectoryDefinitionParts `
     -DisplayName 'M365 License FinOps Report' `
     -Parts $reportParts)
 
+$dataAgentRoot = Join-Path $repoRoot 'demo/M365LicenseFinOps.DataAgent'
+$dataAgentParts = Get-DirectoryDefinitionParts `
+    -Root $dataAgentRoot `
+    -Transform {
+        param($relativePath, $content)
+        if ($relativePath.EndsWith('/datasource.json')) {
+            $dataSource = $content | ConvertFrom-Json
+            $dataSource.artifactId = $semanticModel.id
+            $dataSource.workspaceId = $WorkspaceId
+            return $dataSource | ConvertTo-Json -Depth 50
+        }
+        return $content
+    }
+$dataAgent = Set-FabricItem `
+    -Type 'DataAgent' `
+    -DisplayName 'M365LicenseFinOpsAgent' `
+    -Description 'Microsoft 365 license inventory, assignments, utilization, cost, price source, Copilot activity, and E5 capability configuration.' `
+    -Parts $dataAgentParts
+
 $pipelineContent = [IO.File]::ReadAllText(
     (Join-Path $repoRoot 'demo/pipeline-content.json')
 )
@@ -326,6 +364,7 @@ Write-Host 'Deployment completed.'
 Write-Host "Workspace:       $WorkspaceId"
 Write-Host "Usage notebook:  $($usageNotebook.id)"
 Write-Host "Semantic model:  $($semanticModel.id)"
+Write-Host "Data Agent:      $($dataAgent.id)"
 Write-Host 'Configure the DailyM365LicenseSync schedule in the Fabric portal.'
 
 $token = $null

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/fewShots/1.0.0/schema.json",
+  "fewShots": [
+    {
+      "id": "a32a3c8c-2842-4326-a2d3-478aceeaf4dc",
+      "question": "ライセンスごとの購入数、割当数、空き数を教えて",
+      "query": "EVALUATE SUMMARIZECOLUMNS('License SKU'[License Name], \"購入数\", [# Purchased Seats], \"割当数\", [# Inventory Assigned Seats], \"空き数\", [# Available Seats])"
+    },
+    {
+      "id": "922c1778-1dc9-4eeb-9732-8e1773eebbdb",
+      "question": "部門ごとの割当ユーザー数と月額コストを多い順に見せて",
+      "query": "EVALUATE TOPN(20, SUMMARIZECOLUMNS('User'[Department], \"割当ユーザー\", [# Licensed Users], \"月額コスト\", [Monthly Cost]), [月額コスト], DESC)"
+    },
+    {
+      "id": "88605931-2cd7-4334-9fb6-5ac9faaa6d9f",
+      "question": "利用状態ごとのシート数と月額コストを教えて",
+      "query": "EVALUATE SUMMARIZECOLUMNS('License Utilization'[Utilization Status], \"シート数\", [# Assigned Seats], \"月額コスト\", [Monthly Cost])"
+    },
+    {
+      "id": "10439695-a5e1-4ac9-95d5-ca76eccaeb76",
+      "question": "E5の高度機能ごとに有効ユーザー数、無効ユーザー数、利用率、設定状況を教えて",
+      "query": "EVALUATE FILTER(SUMMARIZECOLUMNS('Service Plan'[機能名], \"有効ユーザー\", [有効ユーザー数], \"無効ユーザー\", [無効ユーザー数], \"利用中ユーザー\", [利用中ユーザー数], \"利用率\", [利用率], \"設定状況\", [設定状況]), NOT ISBLANK([設定状況])) ORDER BY [有効ユーザー] DESC"
+    },
+    {
+      "id": "988bf592-40f8-4f75-b365-b5c451b7be50",
+      "question": "E5の機能名と管理センターのサービスプラン品番の対応を見せて",
+      "query": "EVALUATE FILTER(SUMMARIZECOLUMNS('Service Plan'[機能名], 'Service Plan'[サービスプラン品番], \"有効ユーザー\", [有効ユーザー数]), NOT ISBLANK([有効ユーザー])) ORDER BY 'Service Plan'[機能名], 'Service Plan'[サービスプラン品番]"
+    },
+    {
+      "id": "ed53d998-47b3-4e4f-9d86-cdc0b72b3ff7",
+      "question": "高度なID保護・特権管理が有効なユーザーと利用状態を一覧にして",
+      "query": "EVALUATE VAR _users = CALCULATETABLE(SUMMARIZECOLUMNS('User'[Display Name], 'User'[Department], 'User'[Office Location], \"機能設定\", [機能の設定], \"利用状態\", [利用状態], \"最終利用日\", [最終利用日]), TREATAS({ \"高度なID保護・特権管理（Microsoft Entra ID P2）\" }, 'Service Plan'[機能名])) RETURN FILTER(_users, [機能設定] = \"有効\") ORDER BY 'User'[Display Name]"
+    },
+    {
+      "id": "61afee53-ffa0-47c9-8952-f5c002973f01",
+      "question": "Copilotライセンス保有ユーザーとプロンプト数を見せて",
+      "query": "EVALUATE TOPN(25, FILTER(SUMMARIZECOLUMNS('User'[Display Name], 'User'[Department], \"プロンプト数\", [プロンプト数]), NOT ISBLANK([プロンプト数])), [プロンプト数], DESC, 'User'[Display Name], ASC)"
+    },
+    {
+      "id": "cc73ecf3-6f4b-44b1-9e8c-e2ba16122a32",
+      "question": "ユーザーごとの利用状態と最終利用日を見せて",
+      "query": "EVALUATE TOPN(25, FILTER(SUMMARIZECOLUMNS('User'[Display Name], 'User'[Department], 'User'[Office Location], \"利用状態\", [利用状態], \"最終利用日\", [最終利用日]), NOT ISBLANK([利用状態])), [最終利用日], DESC, 'User'[Display Name], ASC)"
+    },
+    {
+      "id": "3f18f973-f6c6-40e2-a8cf-b4cc0cb4a24c",
+      "question": "ライセンスごとの単価、単価の出典、月額コストを教えて",
+      "query": "EVALUATE SUMMARIZECOLUMNS('License SKU'[License Name], 'SKU Price'[Monthly Unit Price], 'SKU Price'[Price Source], 'SKU Price'[Effective From], \"月額コスト\", [Monthly Cost])"
+    }
+  ]
+}
