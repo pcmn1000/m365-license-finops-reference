@@ -45,8 +45,8 @@ SPO管理フォルダー:
 
 ## デモ向け簡略化
 
-デモでは現在の`dim_sku_price`スキーマを維持し、既存のDirect Lakeモデルを変更しません。
-本番化時は`dim_license_price_history`へ拡張し、有効期間と承認情報を保持します。
+`dim_sku_price` は有効期間を持たず、当日の単価だけを保持します。
+過去の価格で再計算することはできません。
 
 ## 確認項目
 
@@ -89,7 +89,7 @@ E3/E5を判断します。
 
 - ライセンス在庫、割り当て、部門、拠点: 日次
 - Microsoft 365/Copilot利用実績: 日次。ただしソース側レポート更新日に依存
-- 単価: SPO承認後に`SyncM365PriceMaster`を手動またはPower Automateから起動
+- 単価: SPO承認後に`SyncM365PriceMaster`を手動実行
 - 単価の定期照合: 日次Pipelineでも再確認
 
 `DailyM365LicenseSync`は毎日02:00、`Tokyo Standard Time`で有効です。

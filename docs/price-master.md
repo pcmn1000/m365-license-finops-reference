@@ -30,26 +30,6 @@ flowchart LR
 
 `FLOW_FREE` のような無料 SKU は価格マスタに含めず、契約コストの対象外として扱います。
 
-## 本番化する場合の構成
-
-契約改定の履歴を残し、不正な行を本番へ反映させないなら、検証と隣接を追加します。
-
-```mermaid
-flowchart LR
-    OWNER["財務 / 調達 / ライセンス管理者"]
-    APPROVAL["SharePoint承認・バージョン履歴"]
-    XLSX["License-Price-Master.xlsx"]
-    SC["OneLake Shortcut"]
-    NB["Notebook<br/>型・重複・有効期間検証"]
-    QUAR["Quarantine<br/>不正行 + エラー理由"]
-    DELTA[("dim_license_price_history<br/>有効期間付き")]
-    MODEL["Direct Lake / Power BI"]
-
-    OWNER --> APPROVAL --> XLSX --> SC --> NB
-    NB -->|合格| DELTA --> MODEL
-    NB -->|不合格| QUAR
-```
-
 ## Shortcutで自動化できる範囲
 
 できること:
@@ -104,23 +84,14 @@ Excel Table名: `LicensePrices`
 
 ## 起動方式
 
-### 現行: 手動実行
-
 SPO の Excel を更新したら `SyncM365PriceMaster` を手動で実行します。
 日次 Pipeline でも単価は再確認されます。価格改定が年数回ならこれで十分です。
 
-### 本番化: イベント + 定期照合
+## Excelで足りる範囲
 
-- SPOファイル更新をPower Automateで検知
-- 承認済みの場合だけFabric Pipelineのオンデマンド実行APIを呼ぶ
-- 15分スケジュールでも照合し、イベント取りこぼしを回復
-- 夜間ジョブでGraph SKUと価格未設定SKUを照合
-
-## 本番でExcelを採用する判断
-
-Excel + SPOは、価格行数が少なく、更新者が限定され、月次以下の変更頻度であれば
-実用的です。複数承認、行レベル権限、多数通貨、頻繁な契約改定が必要なら、
-SharePoint List、Dataverse、財務MDM、Azure SQLへ移行します。
+Excel + SPO は、価格行数が少なく、更新者が限定され、月次以下の変更頻度であれば
+実用的です。複数承認、行レベル権限、多数通貨、頻繁な契約改定が必要になったら、
+保管先を見直します。
 
 ## 公式リファレンス
 

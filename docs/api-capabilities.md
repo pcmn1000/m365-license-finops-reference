@@ -40,34 +40,32 @@
 したがって、契約単価は財務/調達が管理する外部マスタが必要です。CSPの場合は
 Partner Center APIを別途検討できますが、一般のGraphライセンスAPIとは分けます。
 
-## 組織属性として選択するプロパティ
+## 組織属性として取得しているプロパティ
 
 ```http
-GET /users/delta?$select=id,userPrincipalName,displayName,accountEnabled,
-department,jobTitle,companyName,officeLocation,country,city,employeeId,
-employeeOrgData,assignedLicenses,licenseAssignmentStates
+GET /users?$select=id,userPrincipalName,displayName,department,jobTitle,
+companyName,officeLocation,accountEnabled,assignedLicenses
 ```
 
-`employeeOrgData`には`division`と`costCenter`を保持できます。managerはナビゲーション
-プロパティのため、必要に応じて追加取得またはHRマスタと結合します。
+`employeeOrgData` の `division` や `costCenter` は現行では取得していません。
+manager はナビゲーションプロパティのため、必要なら別途取得が必要です。
 
-## 取得方式の推奨
+## 現行で使っている取得方式
 
-| 処理 | 推奨方式 |
+| 処理 | 方式 |
 | --- | --- |
-| 初回 | `/users`全件 + `/subscribedSkus` + Usage Reports |
-| 日次 | `/users`または`/users/delta`、`/subscribedSkus`、Usage Reports、Copilot Reports、品質チェック |
-| 週次 | 全件照合でdelta取りこぼし、削除、属性差分を確認 |
-| 詳細調査 | 変更ユーザーまたは候補ユーザーだけ`licenseDetails`を取得 |
+| 初回も日次も同じ | `/users`全件 + `/subscribedSkus` + Usage Reports + Copilot Reports |
 
-すべてのGraph呼び出しでページング、429/503/504の指数バックオフ、request ID、
-取得件数、最終deltaLinkを記録します。
+差分取得 (`/users/delta`) は使っていません。全件取得のほうが deltaLink の
+保存や取りこぼしの照合が不要で、数千ユーザー規模なら実行時間も問題になりません。
+
+Graph呼び出しではページングと 429/503/504 の指数バックオフを行っています。
 
 ## プライバシー設定
 
 Usage ReportsはMicrosoft 365管理センターの設定によりユーザー名が匿名化される場合が
-あります。匿名化された状態ではUPN結合ができないため、本番ではプライバシー要件と
-分析要件を合意し、RLS、アクセス監査、保持期間とセットで決定します。
+あります。匿名化された状態ではUPN結合ができないため、ユーザー別の利用実績は
+取得できません。プライバシー要件と分析要件を合意したうえで設定を決めます。
 
 ## 公式リファレンス
 

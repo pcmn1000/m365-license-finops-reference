@@ -1,7 +1,6 @@
 # 詳細アーキテクチャ
 
-このドキュメントは、前半で**現在動いている構成**を、後半で**本番化するときに追加する要素**を
-説明します。現行構成はあえて単純にしてあり、Notebook 1本で完結します。
+現在動いている構成を説明します。Notebook 1本で取得から書き込みまで完結します。
 
 ## 1. 現行構成
 
@@ -98,130 +97,27 @@ Shortcut が無い、または Excel が読めない場合は 2 が使われる�
 **SharePoint を用意しなくても構成は動きます**。契約単価が必要になった時点で
 Excel を置けば、そちらが優先されます。
 
-## 2. 現行の割り切り
+## 2. 現行構成の制約
 
-推奨構成との差分を明示します。デモや小規模導入では、これらは無くても成立します。
+単純にしたぶん、次のことはできません。前提として押さえておく項目です。
 
-| 項目 | 推奨構成 | 現行構成 | 影響 |
-| --- | --- | --- | --- |
-| レイヤー | Bronze / Silver / Gold | フラット10テーブル | 再処理時に取得原本へ戻れない |
-| 履歴 | SCD Type 2 | 日次スナップショット | 異動の前後関係を厳密に追えない |
-| 差分取得 | `/users/delta` + deltaLink管理 | `/users` 全件 | ユーザー数が増えると実行時間が伸びる |
-| 実行制御 | `control_ingestion_run` | なし | 件数・エラーの履歴が残らない |
-| 集計テーブル | Gold ファクト | DAXメジャー | 大規模データで計算が重くなる |
-| 組織マスタ | HRIS / ERP 連携 | Entra の値のみ | コストセンター配賦ができない |
-| 通知 | Power Automate / Teams | なし | 異常に気づくのが遅れる |
-| カタログ | Microsoft Purview | なし | 分類・リネージが管理されない |
-| 単価承認 | イベント駆動 | 手動実行 | 反映漏れが起きうる |
+| 項目 | 現状 | できないこと |
+| --- | --- | --- |
+| レイヤー | フラット10テーブル | 取得原本へ戻っての再処理 |
+| 履歴 | 日次スナップショット | 異動の前後関係を有効期間で厳密に追うこと |
+| 取得 | `/users` 全件 | ユーザー数が数万規模になったときの実行時間短縮 |
+| 実行制御 | なし | 件数・エラーの履歴を残すこと |
+| 集計 | DAXメジャー | 大規模データでの計算負荷の分散 |
+| 組織マスタ | Entra の値のみ | コストセンター単位の配賦 |
+| 通知 | なし | 異常の自動検知 |
+| 単価承認 | 手動実行 | 承認と同時の自動反映 |
 
-「まず動かす」ことを優先するなら現行構成で十分です。ユーザー数が数万規模、
-複数法人での配賦が必要、監査対応が必要、といった条件が加わった時点で
-次章の要素を足します。
+数千ユーザー規模で、部門別・拠点別のコスト把握と E5 の使われ方の確認が目的なら、
+これらは無くても成立します。
 
-## 3. 本番化で追加する要素
+## 3. E3/E5右サイジング
 
-```mermaid
-flowchart LR
-    subgraph M365["Microsoft 365 / 業務システム"]
-        GRAPH["Microsoft Graph"]
-        HR["HRIS / ERP / MDM<br/>組織・コストセンターの正本"]
-        SPO["SharePoint Online<br/>契約単価"]
-    end
-
-    subgraph INGEST["収集・制御"]
-        DELTA["users/delta<br/>差分最適化"]
-        SHORTCUT["OneLake Shortcut"]
-        PIPE["Pipeline<br/>検証・再実行・監視"]
-    end
-
-    subgraph FABRIC["Microsoft Fabric / OneLake"]
-        BRONZE[("Bronze<br/>取得原本・監査")]
-        SILVER[("Silver<br/>正規化・SCD2")]
-        GOLD[("Gold<br/>利用率・配賦・推奨")]
-        MODEL["Direct Lake"]
-    end
-
-    subgraph CONSUME["利用"]
-        PBI["Power BI"]
-        AGENT["Fabric Data Agent"]
-        ALERT["Power Automate / Teams<br/>例外・更新通知"]
-        PURVIEW["Microsoft Purview<br/>カタログ・リネージ"]
-    end
-
-    GRAPH --> DELTA --> PIPE
-    HR --> PIPE
-    SPO --> SHORTCUT --> PIPE
-    PIPE --> BRONZE --> SILVER --> GOLD --> MODEL
-    MODEL --> PBI
-    MODEL --> AGENT
-    GOLD --> ALERT
-    SILVER --> PURVIEW
-```
-
-### 3.1 設計原則
-
-取得元と分析用データを分離します。Microsoft Graph、HRIS、SharePoint Online は
-業務上の正本です。Fabric はそれらを置き換えるのではなく、取得時点の原本、
-変更履歴、分析しやすい共通モデルを保持します。
-
-### 3.2 データの速度を3レーンに分ける
-
-#### Daily directory lane: 割り当て・組織属性
-
-- `/users`を日次取得し、必要に応じて`/users/delta`で転送量を最適化
-- `@odata.deltaLink`を制御テーブルに保存
-- 定期的に全件スナップショットを取得し、削除や取りこぼしを照合
-
-Graph deltaは日次同期の転送量を減らす最適化であり、リアルタイム要件には使いません。
-
-#### Daily lane: 利用実績
-
-- APIレスポンスの`reportRefreshDate`を保存
-- 取得時刻ではなく、ソース側の更新日を鮮度判定に使用
-- 180日を超える履歴はFabric側で日次スナップショットとして保持
-
-#### Reference lane: 単価・組織補正
-
-- OneLake Shortcutが同じファイルを参照し、コピーを作らない
-- Notebookが列名、型、重複、有効期間を検証
-- 合格した行だけをDeltaへMERGEし、変更前の価格は履歴として残す
-- 不合格時は本番価格テーブルを更新せず、Teamsへ通知
-
-### 3.3 Lakehouseのレイヤー
-
-#### Bronze: 原本と監査
-
-| テーブル/ファイル | 内容 |
-| --- | --- |
-| `bronze_graph_users` | Graph userレスポンス。取得日時とrequest IDを付与 |
-| `bronze_graph_skus` | subscribedSkusの原本 |
-| `bronze_m365_usage` | Usage Reports CSV原本 |
-| `bronze_copilot_usage` | Copilot Usage Reports原本 |
-| `control_ingestion_run` | run ID、開始/終了、件数、エラー、ソース更新日 |
-| `control_graph_delta_token` | リソース別deltaLink |
-
-Bronzeは再処理と監査のために保持し、Power BIから直接参照しません。
-
-#### Silver: 共通マスタと履歴
-
-現行の `dim_user` を `dim_user_current` と `dim_user_history` に分け、
-部門・拠点・会社・コストセンターの SCD Type 2 履歴を持たせます。
-`dim_organization`、`dim_location`、`dim_license_price_history` を追加します。
-
-#### Gold: FinOps指標
-
-現行では DAX メジャーで計算している指標を、事前集計テーブルにします。
-
-| テーブル | 主な指標 |
-| --- | --- |
-| `fact_license_cost` | 月額コスト、部門/拠点/コストセンター配賦 |
-| `fact_license_overlap` | 複数SKUが同じサービスプランを提供する重複 |
-| `fact_rightsizing_candidate` | E5→E3、E3→E5、回収候補と根拠 |
-| `fact_data_freshness` | ソース別の最終更新、遅延、SLA違反 |
-
-## 4. E3/E5右サイジング
-
-推奨判定は単純な最終利用日だけで行いません。現行のレポートでも
+判定は単純な最終利用日だけでは行いません。レポートでは
 「要確認候補」までを示し、解約判断は人が行う前提にしています。
 
 ### E5→E3候補
@@ -247,9 +143,8 @@ Bronzeは再処理と監査のために保持し、Power BIから直接参照し
 - サービスプランの有効化は設定シグナルであり、利用実績として扱わない
 - 推定削減額と、判断に使えなかった情報を併記
 
-## 5. Power BIとData Agent
+## 4. Power BIとData Agent
 
 - Direct LakeモデルはLakehouseのテーブルを直接参照
 - 指標は DAX メジャーで定義し、テーブルには持たせない
-- RLSが必要なら、部門責任者とコストセンター責任者のブリッジを別管理
 - Data Agentには右サイジングを断定しない指示と、コストが推定か契約単価かを明示する指示を設定

@@ -5,7 +5,9 @@
 Microsoft 365 License FinOpsは単一製品ではなく、Microsoft純正機能を組み合わせた
 管理・分析構成です。Microsoft Graphからライセンス在庫、ユーザー割り当て、利用実績を
 日次で取得し、契約単価は財務管理者がSharePoint上のExcelで管理します。Fabricは
-OneLakeへ履歴を蓄積して利用率とコストを計算し、Power BIとData Agentから確認します。
+OneLakeへ日次スナップショットを蓄積し、利用率とコストはPower BIのメジャーで
+計算してPower BIとData Agentから確認します。作るのは Notebook 1本と Lakehouse、
+レポートだけです。
 
 ## 製品ごとの役割
 
@@ -13,15 +15,13 @@ OneLakeへ履歴を蓄積して利用率とコストを計算し、Power BIとDa
 | --- | --- | --- |
 | Microsoft Graph | SKU、購入/消費数、ユーザー、割り当て、サービスプラン、Usage Reports | 顧客契約単価、請求書、長期履歴 |
 | Microsoft Entra ID | 現在のユーザー、組織属性、グループライセンス | 過去の部門履歴、契約単価 |
-| SharePoint Online | 契約単価Excel、承認、版管理、補正マスタ | 大量データ分析、履歴計算 |
+| SharePoint Online | 契約単価Excel、承認、版管理 | 大量データ分析、履歴計算 |
 | OneLake Shortcut | SPOフォルダーをコピーせずFabricから参照 | Excelの型検証やDelta変換 |
-| Fabric Notebook/Pipeline | API取得、検証、正規化、履歴、日次処理、例外通知 | 業務上の承認判断 |
-| Fabric Lakehouse | 原本、マスタ、履歴、Gold指標をDeltaで保持 | 人事/財務の正本 |
-| Direct Lake | OneLakeのGoldテーブルをPower BIモデルへ公開 | 元データ収集 |
-| Power BI | KPI、部門/拠点比較、ドリルダウン、RLS | マスタ直接編集 |
+| Fabric Notebook/Pipeline | API取得、検証、正規化、日次処理 | 業務上の承認判断 |
+| Fabric Lakehouse | マスタと日次スナップショットをDeltaで保持 | 人事/財務の正本 |
+| Direct Lake | OneLakeのテーブルをPower BIモデルへ公開 | 元データ収集 |
+| Power BI | KPI、部門/拠点比較、ドリルダウン、指標のDAX定義 | マスタ直接編集 |
 | Fabric Data Agent | 自然言語で管理データを検索 | 自動解約や無承認のライセンス変更 |
-| Microsoft Purview | カタログ、所有者、分類、リネージ、品質 | ETL実行 |
-| Power Automate/Teams | 承認、単価更新起動、異常通知 | 大規模変換 |
 
 ## 5分で説明する流れ
 
@@ -49,10 +49,10 @@ OneLake ShortcutはSPOの管理フォルダーをFabricのFiles配下に見せ�
 Shortcutの再作成は不要です。ただしExcelが自動的に分析テーブルへ変わるわけではなく、
 Notebookが必須列、重複、有効期間、承認状態を検証してDeltaへ反映します。
 
-### 5. Fabricで履歴と判断根拠を作る
+### 5. Fabricで日次のスナップショットを持つ
 
-Entraの部門や拠点は現在値なので、異動前のコストを正しく説明するためFabricで履歴を
-保持します。利用率、重複SKU、未利用候補、E3/E5の右サイジング候補を作りますが、
+Entraの部門や拠点は現在値なので、Fabric側で日付ごとのスナップショットを残します。
+利用率、未利用候補、E3/E5の右サイジング候補を示しますが、
 自動解約ではなく根拠付きの要確認候補として提示します。
 
 ### 6. Power BIとData Agentで利用する
@@ -68,9 +68,9 @@ Data Agentでは
 
 ### リアルタイムにできますか
 
-契約単価はSPO承認後のイベント起動で準リアルタイムにできます。ライセンス在庫、割り当て、
-部門、拠点、Usageはお客様要件に合わせて日次です。Usage Reports自体はMicrosoft側の
-更新周期に依存するため、リアルタイムとは表現しません。
+できません。ライセンス在庫、割り当て、部門、拠点、Usage はすべて日次です。
+Usage Reports 自体がMicrosoft側の更新周期に依存するため、
+リアルタイムとは表現しません。単価は承認後にNotebookを実行した時点で反映されます。
 
 ### Excelを更新すればPower BIも自動更新されますか
 
@@ -89,9 +89,9 @@ Power BIの`E5機能チェック`ページで表示する有効/無効はライ�
 
 ### 部門情報はFabricで管理しますか
 
-正本はHRIS、現在値の配布先はEntra、分析履歴はFabricです。Fabricだけを正本にはしません。
-コストセンターはERP/財務MDMを正本とし、Entraの`employeeOrgData.costCenter`へ同期するか、
-Fabricで承認済みマスタと結合します。
+しません。Microsoft Entra ID の値をそのまま取得しています。
+Fabric は日付ごとのスナップショットを残すだけで、正本にはしません。
+部門や拠点が未設定のユーザーは `Unassigned` として表示し、推測で埋めません。
 
 ### Azure Cost Managementと同じですか
 
