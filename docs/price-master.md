@@ -1,16 +1,48 @@
 # 単価マスタとSPO Shortcut
 
-## 推奨構成
+## 現在の構成
+
+単価は2段構えで決まります。**SharePoint を用意しなくても動きます**。
+
+```mermaid
+flowchart LR
+    XLSX["License-Price-Master.xlsx<br/>SPO上・LicensePricesシート"]
+    SC["OneLake Shortcut<br/>Files/reference/sharepoint-license-prices"]
+    NB["Notebook<br/>SyncM365PriceMaster"]
+    FALLBACK["Notebook内のパブリック定価<br/>JP・年間契約・税抜"]
+    DELTA[("dim_sku_price")]
+    MODEL["Direct Lake / Power BI"]
+
+    XLSX --> SC --> NB
+    NB -->|Approved行があれば| DELTA
+    FALLBACK -->|Excelがない/読めない場合| DELTA
+    DELTA --> MODEL
+```
+
+| 優先順 | ソース | 条件 |
+| --- | --- | --- |
+| 1 | SPO の Excel | Shortcut があり、`status = Approved` の行がある |
+| 2 | Notebook 内のパブリック定価 | 上記以外 |
+
+まずは定価で動かし、契約単価が必要になった段階で SharePoint を追加する、
+という進め方ができます。現行の `dim_sku_price` は有効期間を持たず、
+当日の単価だけを保持します。
+
+`FLOW_FREE` のような無料 SKU は価格マスタに含めず、契約コストの対象外として扱います。
+
+## 本番化する場合の構成
+
+契約改定の履歴を残し、不正な行を本番へ反映させないなら、検証と隣接を追加します。
 
 ```mermaid
 flowchart LR
     OWNER["財務 / 調達 / ライセンス管理者"]
     APPROVAL["SharePoint承認・バージョン履歴"]
-    XLSX["License-Price-Master.xlsx<br/>Excel Table: LicensePrices"]
-    SC["OneLake Shortcut<br/>Files/reference/sharepoint-license-prices"]
-    NB["Fabric Notebook<br/>型・重複・有効期間検証"]
+    XLSX["License-Price-Master.xlsx"]
+    SC["OneLake Shortcut"]
+    NB["Notebook<br/>型・重複・有効期間検証"]
     QUAR["Quarantine<br/>不正行 + エラー理由"]
-    DELTA[("dim_license_price_history<br/>Delta")]
+    DELTA[("dim_license_price_history<br/>有効期間付き")]
     MODEL["Direct Lake / Power BI"]
 
     OWNER --> APPROVAL --> XLSX --> SC --> NB
@@ -72,18 +104,17 @@ Excel Table名: `LicensePrices`
 
 ## 起動方式
 
-### 推奨: イベント + 定期照合
+### 現行: 手動実行
+
+SPO の Excel を更新したら `SyncM365PriceMaster` を手動で実行します。
+日次 Pipeline でも単価は再確認されます。価格改定が年数回ならこれで十分です。
+
+### 本番化: イベント + 定期照合
 
 - SPOファイル更新をPower Automateで検知
 - 承認済みの場合だけFabric Pipelineのオンデマンド実行APIを呼ぶ
 - 15分スケジュールでも照合し、イベント取りこぼしを回復
 - 夜間ジョブでGraph SKUと価格未設定SKUを照合
-
-### シンプル構成
-
-- Fabric Pipelineを15分ごとに実行
-- ファイルのETag/更新日時が変わった時だけ変換
-- PoCや小規模運用ではこの構成で十分
 
 ## 本番でExcelを採用する判断
 

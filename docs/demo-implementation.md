@@ -15,6 +15,18 @@
 | SPO site | `M365 License FinOps Data` |
 | Fabric connection | `M365FinOpsSPO admin` (`673c247a-7b90-4865-b78b-a703191d7515`) |
 | OneLake Shortcut | `Files/reference/sharepoint-license-prices` |
+| Data Agent | `M365LicenseFinOpsAgent` |
+
+Lakehouse の Delta テーブルは10本で、Bronze/Silver/Gold のような層は作っていません。
+
+```text
+dim_user  dim_sku  dim_sku_price  dim_service_plan  bridge_sku_service_plan
+fact_license_assignment  fact_service_entitlement  fact_license_utilization
+fact_m365_usage  fact_copilot_usage
+```
+
+利用率、月額コスト、削減可能額は集計テーブルを作らず、
+セマンティックモデルの DAX メジャーで計算しています。
 
 ## 今回の変更
 
@@ -84,8 +96,10 @@ E3/E5を判断します。
 
 ## Usage Reportsの匿名化
 
-このデモテナントではMicrosoft 365 Usage Reportsのユーザー名が匿名化されています。
-匿名化されたレポートはUPNでユーザーへ結合できないため、Notebookは次の動作をします。
+このデモテナントでは Microsoft 365 管理センターで**匿名化を解除済み**です。
+そのため UPN でユーザーと結合でき、ユーザー別の利用実績が見えます。
+
+匿名化が有効なテナントでは Notebook は次の動作をします。
 
 - ライセンス在庫、ユーザー、組織属性、サービスプラン、単価は通常どおり更新
 - M365/Copilotのユーザー別Usage行は空として扱う
@@ -93,5 +107,5 @@ E3/E5を判断します。
   `copilot_report_names_concealed`を出力
 - Power BIではUsageの鮮度/利用不可を表示し、0件を「未利用」と断定しない
 
-ユーザー別利用分析が必要な本番環境では、プライバシー責任者の承認、RLS、監査、
-保持期間を合意したうえでMicrosoft 365管理センターのレポート匿名化設定を変更します。
+本番環境でユーザー別分析を行うなら、プライバシー責任者の承認、RLS、監査、
+保持期間を合意したうえで匿名化設定を変更します。
