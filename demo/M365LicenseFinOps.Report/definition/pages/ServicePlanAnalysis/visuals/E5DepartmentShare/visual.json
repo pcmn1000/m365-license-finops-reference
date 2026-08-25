@@ -1,16 +1,16 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
-  "name": "E5CapabilityUserDrilldown",
+  "name": "E5DepartmentShare",
   "position": {
-    "x": 24,
+    "x": 832,
     "y": 476,
-    "z": 9000,
+    "z": 10000,
     "height": 224,
-    "width": 792,
-    "tabOrder": 9000
+    "width": 424,
+    "tabOrder": 10000
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "pieChart",
     "visualContainerObjects": {
       "title": [
         {
@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'選択中の機能の対象ユーザー'"
+                  "Value": "'部門別のE5利用割合'"
                 }
               }
             },
@@ -195,96 +195,23 @@
     },
     "drillFilterOtherVisuals": true,
     "objects": {
-      "columnHeaders": [
+      "legend": [
         {
           "properties": {
-            "fontFamily": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Segoe UI Semibold'"
-                }
-              }
-            },
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "10D"
-                }
-              }
-            },
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#132330'"
-                    }
-                  }
-                }
-              }
-            },
-            "backColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#BFE8E4'"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      ],
-      "grid": [
-        {
-          "properties": {
-            "rowPadding": {
-              "expr": {
-                "Literal": {
-                  "Value": "7D"
-                }
-              }
-            },
-            "textSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "10D"
-                }
-              }
-            },
-            "gridVertical": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            },
-            "gridHorizontal": {
+            "show": {
               "expr": {
                 "Literal": {
                   "Value": "true"
                 }
               }
             },
-            "outlineColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#C8D8E5'"
-                    }
-                  }
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Right'"
                 }
               }
-            }
-          }
-        }
-      ],
-      "values": [
-        {
-          "properties": {
+            },
             "fontFamily": {
               "expr": {
                 "Literal": {
@@ -295,11 +222,56 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "9D"
                 }
               }
             },
-            "fontColorPrimary": {
+            "labelColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#607080'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "labelStyle": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Category, percent of total'"
+                }
+              }
+            },
+            "fontFamily": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Segoe UI'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            },
+            "color": {
               "solid": {
                 "color": {
                   "expr": {
@@ -309,54 +281,6 @@
                   }
                 }
               }
-            },
-            "backColorPrimary": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#F8FBFF'"
-                    }
-                  }
-                }
-              }
-            },
-            "backColorSecondary": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#EEF6FA'"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      ],
-      "total": [
-        {
-          "properties": {
-            "totals": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "visualHeader": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
             }
           }
         }
@@ -364,22 +288,8 @@
     },
     "query": {
       "queryState": {
-        "Values": {
+        "Category": {
           "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "User"
-                    }
-                  },
-                  "Property": "Display Name"
-                }
-              },
-              "queryRef": "User.Display Name",
-              "displayName": "氏名"
-            },
             {
               "field": {
                 "Column": {
@@ -392,22 +302,12 @@
                 }
               },
               "queryRef": "User.Department",
-              "displayName": "部門"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "User"
-                    }
-                  },
-                  "Property": "Office Location"
-                }
-              },
-              "queryRef": "User.Office Location",
-              "displayName": "拠点"
-            },
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -416,36 +316,10 @@
                       "Entity": "Service Entitlement"
                     }
                   },
-                  "Property": "機能の設定"
+                  "Property": "# E5 Capability Target Users"
                 }
               },
-              "queryRef": "Service Entitlement.機能の設定"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "License Utilization"
-                    }
-                  },
-                  "Property": "利用状態"
-                }
-              },
-              "queryRef": "License Utilization.利用状態"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "License Utilization"
-                    }
-                  },
-                  "Property": "最終利用日"
-                }
-              },
-              "queryRef": "License Utilization.最終利用日"
+              "queryRef": "Service Entitlement.# E5 Capability Target Users"
             }
           ]
         }

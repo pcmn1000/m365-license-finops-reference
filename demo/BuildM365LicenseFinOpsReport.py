@@ -470,6 +470,48 @@ def bar_chart(name, x, y, width, height, title, category, values, sort_measure=N
     )
 
 
+def pie_chart(name, x, y, width, height, title, category, value):
+    objects = {
+        "legend": [
+            {
+                "properties": {
+                    "show": literal("true"),
+                    "position": literal("'Right'"),
+                    "fontFamily": literal("'Segoe UI'"),
+                    "fontSize": literal("9D"),
+                    "labelColor": solid_color(COLORS["muted"]),
+                }
+            }
+        ],
+        "labels": [
+            {
+                "properties": {
+                    "show": literal("true"),
+                    "labelStyle": literal("'Category, percent of total'"),
+                    "fontFamily": literal("'Segoe UI'"),
+                    "fontSize": literal("9D"),
+                    "color": solid_color(COLORS["ink"]),
+                }
+            }
+        ],
+    }
+    return visual_container(
+        name,
+        "pieChart",
+        x,
+        y,
+        width,
+        height,
+        title,
+        {
+            "Category": {"projections": [category]},
+            "Y": {"projections": [value]},
+        },
+        None,
+        objects,
+    )
+
+
 def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap=False):
     sort = None
     if sort_measure:
@@ -758,16 +800,20 @@ def build_pages():
                     246,
                     856,
                     214,
-                    "E5の高度機能（行を選ぶと下のユーザー一覧が絞り込まれます）",
+                    "E5の高度機能（機能名を展開すると管理センターの品番を確認できます）",
                     [
                         column(
                             "Service Plan",
                             "機能名",
                             display_name="機能名",
                         ),
+                        column(
+                            "Service Plan",
+                            "サービスプラン品番",
+                            display_name="サービスプラン品番",
+                        ),
                         reportable_enabled_users,
                         measure("Service Entitlement", "利用中ユーザー数"),
-                        measure("Service Entitlement", "利用率"),
                     ],
                     reportable_enabled_users,
                     word_wrap=True,
@@ -776,7 +822,7 @@ def build_pages():
                     "E5CapabilityUserDrilldown",
                     24,
                     476,
-                    1232,
+                    792,
                     224,
                     "選択中の機能の対象ユーザー",
                     [
@@ -787,6 +833,16 @@ def build_pages():
                         measure("License Utilization", "利用状態"),
                         measure("License Utilization", "最終利用日"),
                     ],
+                ),
+                pie_chart(
+                    "E5DepartmentShare",
+                    832,
+                    476,
+                    424,
+                    224,
+                    "部門別のE5利用割合",
+                    column("User", "Department", True),
+                    measure("Service Entitlement", "# E5 Capability Target Users"),
                 ),
             ],
             "visualInteractions": [
@@ -801,7 +857,22 @@ def build_pages():
                     "type": "DataFilter",
                 },
                 {
+                    "source": "CapabilityCategorySummary",
+                    "target": "E5DepartmentShare",
+                    "type": "DataFilter",
+                },
+                {
                     "source": "E5CapabilityDetails",
+                    "target": "E5CapabilityUserDrilldown",
+                    "type": "DataFilter",
+                },
+                {
+                    "source": "E5CapabilityDetails",
+                    "target": "E5DepartmentShare",
+                    "type": "DataFilter",
+                },
+                {
+                    "source": "E5DepartmentShare",
                     "target": "E5CapabilityUserDrilldown",
                     "type": "DataFilter",
                 },

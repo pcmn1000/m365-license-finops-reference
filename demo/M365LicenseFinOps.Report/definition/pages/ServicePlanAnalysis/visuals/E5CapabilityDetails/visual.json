@@ -25,7 +25,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'E5の高度機能（行を選ぶと下のユーザー一覧が絞り込まれます）'"
+                  "Value": "'E5の高度機能（機能名を展開すると管理センターの品番を確認できます）'"
                 }
               }
             },
@@ -396,6 +396,20 @@
             },
             {
               "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Service Plan"
+                    }
+                  },
+                  "Property": "サービスプラン品番"
+                }
+              },
+              "queryRef": "Service Plan.サービスプラン品番",
+              "displayName": "サービスプラン品番"
+            },
+            {
+              "field": {
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
@@ -419,19 +433,6 @@
                 }
               },
               "queryRef": "Service Entitlement.利用中ユーザー数"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Service Entitlement"
-                    }
-                  },
-                  "Property": "利用率"
-                }
-              },
-              "queryRef": "Service Entitlement.利用率"
             }
           ]
         }

@@ -16,6 +16,12 @@ table 'Service Plan'
 		summarizeBy: none
 		sourceColumn: service_plan_name
 
+	/// 管理センターやMicrosoft Graphで使われるサービスプランの品番。
+	column 'サービスプラン品番'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: service_plan_name
+
 	/// 複数のGraph内部プランをまとめた、利用者向けの日本語機能名。
 	column '機能名'
 		dataType: string
