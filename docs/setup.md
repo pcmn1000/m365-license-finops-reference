@@ -17,6 +17,15 @@ Notebook、セマンティックモデル、レポート、Data Agent、Pipeline
 
 作業するユーザーには、対象 Fabric ワークスペースの管理者権限が必要です。
 
+Microsoft 365 CopilotからData Agentを使う場合は、さらに次が必要です。
+
+- FabricとMicrosoft 365 Copilotが同じテナントにある
+- 利用者がData Agentと接続先セマンティックモデルを読み取れる
+- Direct LakeのSSOで必要となるLakehouseの読み取り権限がある
+- Microsoft 365 Copilotまたは対象となるOffice 365商用サブスクリプションがある
+- Microsoft 365管理センターでCopilotのエージェント拡張が許可されている
+- テナント要件に応じて、FabricのAIクロスリージョン処理・保存設定が許可されている
+
 ## 1. Entra ID にアプリを登録する
 
 Graph をアプリケーション権限で呼ぶための登録です。
@@ -165,7 +174,32 @@ py -3.12 .\demo\BuildM365LicenseFinOpsReport.py <semantic-model-id>
 生成後にデプロイスクリプトを `-SkipNotebookRun` 付きで再実行すると、
 データ同期を待たずにレポート定義を更新できます。
 
-## 8. 動作確認
+## 8. Microsoft 365 Copilotへ公開する（任意）
+
+`tools/deploy_fabric_items.ps1` はData Agentのdraft/published定義をFabricへ配置します。
+Microsoft 365 CopilotのAgent Storeへの登録はFabricポータルで行います。
+
+1. Fabricワークスペースで `M365LicenseFinOpsAgent` を開く
+2. テストチャットで代表質問が正しく回答されることを確認する
+3. 公開メニューを開く
+4. **Publish to Agent Store** を選択する
+5. Microsoft 365 CopilotまたはTeamsのAgent Storeで
+   `M365LicenseFinOpsAgent` が表示されることを確認する
+
+Agent Storeへ公開された後は、次の2通りで利用できます。
+
+- Agent Storeから `M365LicenseFinOpsAgent` を直接開いて質問する
+- Microsoft 365 Copilotのメインチャットで `@M365LicenseFinOpsAgent` と指定する
+
+共有先のユーザーにもData Agentだけでなく、接続先セマンティックモデルと
+Direct Lakeデータへの権限が必要です。RLSやOLSが設定されている場合は、
+Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
+
+> [!IMPORTANT]
+> Fabric内の「公開」とAgent Storeへの公開は別です。published定義が存在するだけでは、
+> Microsoft 365 CopilotのAgent Storeには表示されません。
+
+## 9. 動作確認
 
 - Lakehouse に10本のテーブルがあり、`snapshot_date` が当日になっている
 - Power BI レポートの4ページがすべて表示される
@@ -174,6 +208,7 @@ py -3.12 .\demo\BuildM365LicenseFinOpsReport.py <semantic-model-id>
 - 月額コストが 0 になっていない（単価が引けている）
 - Data Agentで「E5の機能名とサービスプラン品番の対応を見せて」と質問できる
 - Data Agentが機能の有効化を実利用と断定しない
+- Agent Storeへ公開した場合、Microsoft 365 CopilotでAgent名を検索または`@`指定できる
 
 ## つまずきやすいところ
 
@@ -184,3 +219,10 @@ py -3.12 .\demo\BuildM365LicenseFinOpsReport.py <semantic-model-id>
 | 月額コストが 0 | SKU コードが単価表と一致していない |
 | レポートが「モデルを読み込めません」 | セマンティックモデルの Lakehouse 接続先が違う |
 | Direct Lake がエラー | Fabric 容量が一時停止している |
+| Agent Storeに表示されない | Publish to Agent Store未実施、Copilot拡張が無効、または権限不足 |
+| Agentは開くが回答できない | セマンティックモデルまたはLakehouseへの利用者権限が不足 |
+
+## 公式リファレンス
+
+- [Consume Fabric data agent in Microsoft 365 Copilot](https://learn.microsoft.com/fabric/data-science/data-agent-microsoft-365-copilot)
+- [Fabric data agent sharing and permission management](https://learn.microsoft.com/fabric/data-science/data-agent-sharing)

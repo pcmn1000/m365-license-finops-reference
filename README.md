@@ -24,8 +24,15 @@ Pipeline の定義、環境固有IDを置換してFabricへ配置するスクリ
 ## 現在の構成
 
 実際に動いているのは次の構成です。Notebook 1本が Microsoft Graph を叩き、
-Lakehouse へ日次スナップショットを書き、Direct Lake モデル経由で Power BI が読みます。
+Lakehouse へ最新マスタ5表と日次ファクト5表を書き、Direct Lake モデル経由で
+Power BI と Data Agent が読みます。
 中間レイヤーも外部システム連携もありません。
+
+![Microsoft 365 ライセンス FinOps の現行アーキテクチャ。Microsoft GraphとSharePointからFabricへ取り込み、Lakehouse、セマンティックモデル、Power BI、Data Agent、Microsoft 365 Copilotへ接続する構成図。](docs/images/architecture-overview.png)
+
+背景は Microsoft Foundry の `FLUX.2-pro` で生成し、製品アイコンはMicrosoft公式配布
+アセットを合成しています。[図の生成元とアイコン出典](docs/images/README.md)も参照してください。
+次のMermaidは同じ構成を更新しやすい形式で表したものです。
 
 ```mermaid
 flowchart LR
@@ -88,8 +95,9 @@ Bronze/Silver/Gold のような層は作らず、10本のDeltaテーブルをフ
 | `fact_m365_usage` | Exchange/OneDrive/SharePoint/Teamsの最終利用日 |
 | `fact_copilot_usage` | Copilotの最終利用日、プロンプト数、利用日数 |
 
-全テーブルが `snapshot_date` 列を持ち、同じ日付の行を削除してから追記します。
-過去日のスナップショットはそのまま残るため、日単位の推移を追えます。
+ユーザー、SKU、サービスプラン、対応表、単価は最新値で上書きします。
+割り当て、機能設定、M365/Copilot利用実績、利用状態は `snapshot_date` ごとに保持し、
+同じ日付の行を削除してから追記します。
 
 ## 最低限で始めるには
 
@@ -120,8 +128,19 @@ Pipeline も後回しにして、まず手動実行で構いません。
 
 ## ドキュメント
 
+初めて読む場合は、次の順序で確認してください。
+
+| 順序 | ドキュメント | 分かること |
+| --- | --- | --- |
+| 1 | [構築手順](docs/setup.md) | 必要な権限、作成順序、デプロイ、動作確認 |
+| 2 | [詳細アーキテクチャ](docs/architecture.md) | データ経路、役割分担、保存方式、マッピング |
+| 3 | [用語と役割](docs/glossary.md) | Microsoft 365、Fabric、Power BI、モデルの用語 |
+| 4 | [Microsoft Graph / API取得範囲](docs/api-capabilities.md) | 実際に呼ぶAPI、取得項目、保存先 |
+| 5 | [単価マスタとSPO Shortcut](docs/price-master.md) | 単価Excelの仕様と反映方法 |
+
 - [構築手順](docs/setup.md) — 自分のテナントに同じものを作る手順
 - [詳細アーキテクチャ](docs/architecture.md) — 取得API、書き込み方式、テーブル、単価とサービスプランのマッピング
+- [用語と役割](docs/glossary.md) — Microsoft 365、Fabric、Power BI、データモデルの用語集
 - [Microsoft Graph / API取得範囲](docs/api-capabilities.md)
 - [単価マスタとSPO Shortcut](docs/price-master.md)
 - [人・部門・拠点・コストセンターの管理](docs/master-data.md)

@@ -6,13 +6,101 @@
 
 ### 全体の流れ
 
+![Microsoft 365 ライセンス FinOps の現行アーキテクチャ。取得元、取り込み、保存・モデル、可視化・対話の4層を示す。](images/architecture-overview.png)
+
+このPNGは説明・共有用です。背景は Microsoft Foundry の `FLUX.2-pro` で生成し、
+製品名、日本語ラベル、接続線、Microsoft公式アイコンは後から正確に合成しています。
+[生成元とアイコン出典](images/README.md)に利用した公式配布元を記録しています。
+
 `SyncM365LicenseUsage` Notebook が毎日 02:00 (JST) に実行され、次を順に行います。
 
 1. Microsoft Graph から4種類のデータを取得する
 2. Python 側で結合・分類してテーブルごとの行を組み立てる
-3. Lakehouse の Delta テーブルへスナップショットとして書く
+3. Lakehouseへ最新マスタ5表と日次スナップショット5表を書き込む
 
 中間ファイルも制御テーブルも作らず、1回の実行で取得から書き込みまで完結します。
+
+### 何をどの順序で作るか
+
+構築は次の依存関係に沿って進めます。後段のアイテムは前段のIDやデータを参照します。
+
+```mermaid
+flowchart LR
+        APP["1. Entraアプリ登録<br/>Graph権限4つ"]
+        KV["2. Key Vault<br/>クライアントシークレット"]
+        CAP["3. Fabric容量・ワークスペース"]
+        LH["4. Lakehouse"]
+        NB["5. 同期Notebook"]
+        TABLES["6. Deltaテーブル10本"]
+        MODEL["7. Direct Lake<br/>セマンティックモデル"]
+        REPORT["8. Power BIレポート"]
+        AGENT["9. Data Agent"]
+        PIPE["10. 日次Pipeline"]
+
+        APP --> KV
+        CAP --> LH
+        KV --> NB
+        LH --> NB
+        NB --> TABLES --> MODEL
+        MODEL --> REPORT
+        MODEL --> AGENT
+        NB --> PIPE
+```
+
+| 順序 | 作るもの | 入力 | 出力・次で使うもの |
+| --- | --- | --- | --- |
+| 1 | Entraアプリ登録 | なし | テナントID、クライアントID、Graph権限 |
+| 2 | Key Vault | クライアントシークレット | Notebookから参照するSecret URI |
+| 3 | Fabric容量・ワークスペース | Azureサブスクリプション | ワークスペースID |
+| 4 | Lakehouse | ワークスペース | Lakehouse ID、OneLake保存先 |
+| 5 | `SyncM365LicenseUsage` | Graph認証情報、Lakehouse | Graphから取得したデータ |
+| 6 | Deltaテーブル10本 | Notebookの処理結果 | Direct Lakeで参照するテーブル |
+| 7 | セマンティックモデル | Lakehouseテーブル | リレーション、DAXメジャー |
+| 8 | Power BIレポート | セマンティックモデル | 4ページの可視化 |
+| 9 | Data Agent | セマンティックモデル | 自然言語でのデータ照会 |
+| 10 | `DailyM365LicenseSync` | 同期Notebook | 毎日02:00の自動更新 |
+
+実際の配置は [構築手順](setup.md) の
+`tools/deploy_fabric_items.ps1` が手順5、7、8、9、10を自動化します。
+
+### データが回答になるまで
+
+```mermaid
+flowchart LR
+        GRAPH["Microsoft Graph API"]
+        PRICE["SharePoint単価Excel<br/>または組み込み定価"]
+        NB["Fabric Notebook<br/>取得・整形・分類"]
+        LH["Lakehouse<br/>Deltaテーブル"]
+        SM["Semantic Model<br/>関係・DAXメジャー"]
+        PBI["Power BI<br/>表・グラフ・ドリルダウン"]
+        DA["Data Agent<br/>自然言語→DAX→回答"]
+
+        GRAPH --> NB
+        PRICE --> NB
+        NB --> LH --> SM
+        SM --> PBI
+        SM --> DA
+```
+
+- NotebookはAPIレスポンスを分析しやすい粒度へ変換します。
+- Lakehouseは日付付きのデータをDelta形式で保持します。
+- セマンティックモデルはテーブル同士を結び、指標の計算式を定義します。
+- Power BIとData Agentは同じセマンティックモデルを使うため、指標定義が一致します。
+
+### サービスごとの役割分担
+
+| サービス・アイテム | 担当すること | 担当しないこと |
+| --- | --- | --- |
+| Microsoft Entra ID | ユーザー、組織属性、ライセンス割り当ての正本 | 利用実績や契約単価の保持 |
+| Microsoft Graph | Microsoft 365データをAPIで返す | データの長期保存、契約単価の提供 |
+| Azure Key Vault | Graphのクライアントシークレットを保管 | データ変換や分析 |
+| Fabric Notebook | API取得、正規化、分類、Delta書き込み | レポート表示、ユーザー対話 |
+| Fabric Lakehouse | 最新マスタと日次ファクトをDelta形式で保持 | 指標の意味や画面レイアウトの定義 |
+| Fabric Pipeline | Notebookを毎日実行 | データの中身の計算 |
+| セマンティックモデル | リレーション、表示名、DAXメジャーを定義 | Graph APIの呼び出し |
+| Power BIレポート | KPI、表、グラフ、フィルター、ドリルダウンを表示 | データの取得・保存 |
+| Fabric Data Agent | 自然言語をDAXへ変換し、モデルのデータで回答 | データ更新、ライセンス変更 |
+| SharePoint + Shortcut | 契約単価Excelを保管し、Lakehouseから参照 | Excelを自動で分析テーブルへ変換 |
 
 ### 取得している Graph API
 
@@ -20,24 +108,31 @@
 | --- | --- |
 | `GET /users?$select=...` | ユーザー、部門、拠点、役職、アカウント状態、割当SKU |
 | `GET /subscribedSkus?$select=...` | SKU、購入数、消費数、含まれるサービスプラン |
-| `GET /reports/getOffice365ActiveUserDetail(period='D30')` | Exchange/OneDrive/SharePoint/Teams の最終利用日 |
-| `GET /copilot/reports/getMicrosoft365CopilotUsageUserDetail(period='D30',version='v2')` | Copilot の最終利用日、プロンプト数、利用日数 |
+| `GET /reports/getOffice365ActiveUserDetail(period='D180')` | Exchange/OneDrive/SharePoint/Teams の最終利用日 |
+| `GET /copilot/reports/getMicrosoft365CopilotUsageUserDetail(period='D180',version='v2')` | Copilot の最終利用日、プロンプト数、利用日数 |
 
 `/users/delta` は使っていません。全件取得のほうが状態管理が不要で、
 数千ユーザー規模なら実行時間も問題になりません。
 
 ### 書き込み方式
 
-全テーブルが `snapshot_date` 列を持ちます。書き込みは「同じ日付の行を消してから追記」です。
+10テーブルは、最新状態を持つテーブルと日次履歴を持つテーブルに分かれます。
+
+| 書き込み方式 | テーブル | 保持内容 |
+| --- | --- | --- |
+| 全件上書き | `dim_user`、`dim_sku`、`dim_service_plan`、`bridge_sku_service_plan`、`dim_sku_price` | 最新のマスタ・対応・単価 |
+| 同日削除後に追記 | `fact_license_assignment`、`fact_service_entitlement`、`fact_m365_usage`、`fact_copilot_usage`、`fact_license_utilization` | 日次スナップショット |
+
+日次ファクトの書き込みは「同じ日付の行を消してから追記」です。
 
 ```python
 DELETE FROM `{table}` WHERE snapshot_date = DATE '{today}'
 frame.write.mode("append").format("delta").saveAsTable(table)
 ```
 
-同日中に何度実行しても結果が変わらず、過去日のスナップショットは残ります。
-SCD Type 2 のような有効期間管理は行っていません。「その日どうだったか」を
-日付で引く方式です。
+同日中に何度実行しても重複せず、ファクトの過去日スナップショットは残ります。
+ディメンションとブリッジは毎回上書きされるため、過去の属性値は残りません。
+SCD Type 2 のような有効期間管理は行っていません。
 
 ### テーブル一覧
 
