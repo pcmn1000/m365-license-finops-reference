@@ -569,6 +569,82 @@ def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap
     )
 
 
+def matrix(name, x, y, width, height, title, rows, values, sort_measure=None):
+    sort = None
+    if sort_measure:
+        sort = {"field": sort_measure["field"], "direction": "Descending"}
+    objects = {
+        "columnHeaders": [
+            {
+                "properties": {
+                    "fontFamily": literal("'Segoe UI Semibold'"),
+                    "fontSize": literal("10D"),
+                    "fontColor": solid_color(COLORS["ink"]),
+                    "backColor": solid_color(COLORS["accent_soft"]),
+                    "wordWrap": literal("true"),
+                }
+            }
+        ],
+        "rowHeaders": [
+            {
+                "properties": {
+                    "fontFamily": literal("'Segoe UI'"),
+                    "fontSize": literal("10D"),
+                    "fontColor": solid_color(COLORS["ink"]),
+                    "backColor": solid_color(COLORS["surface"]),
+                    "wordWrap": literal("true"),
+                    "steppedLayout": literal("true"),
+                    "steppedLayoutIndentation": literal("18D"),
+                }
+            }
+        ],
+        "expandCollapse": [{"properties": {"show": literal("true")}}],
+        "grid": [
+            {
+                "properties": {
+                    "rowPadding": literal("7D"),
+                    "textSize": literal("10D"),
+                    "gridVertical": literal("false"),
+                    "gridHorizontal": literal("true"),
+                    "outlineColor": solid_color(COLORS["line"]),
+                }
+            }
+        ],
+        "values": [
+            {
+                "properties": {
+                    "fontFamily": literal("'Segoe UI'"),
+                    "fontSize": literal("10D"),
+                    "fontColorPrimary": solid_color(COLORS["ink"]),
+                    "backColorPrimary": solid_color(COLORS["surface"]),
+                    "backColorSecondary": solid_color(COLORS["surface_alt"]),
+                }
+            }
+        ],
+        "subTotals": [
+            {
+                "properties": {
+                    "rowSubtotals": literal("false"),
+                    "columnSubtotals": literal("false"),
+                }
+            }
+        ],
+        "total": [{"properties": {"totals": literal("false")}}],
+    }
+    return visual_container(
+        name,
+        "pivotTable",
+        x,
+        y,
+        width,
+        height,
+        title,
+        {"Rows": {"projections": rows}, "Values": {"projections": values}},
+        sort,
+        objects,
+    )
+
+
 def build_pages():
     assigned = measure("License Utilization", "# Assigned Seats")
     active = measure("License Utilization", "# Active Seats")
@@ -794,13 +870,13 @@ def build_pages():
                     [decision_capabilities],
                     decision_capabilities,
                 ),
-                table(
+                matrix(
                     "E5CapabilityDetails",
                     400,
                     246,
                     856,
                     214,
-                    "E5の高度機能（機能名を展開すると管理センターの品番を確認できます）",
+                    "E5の高度機能（機能名の＋で管理センターの品番を展開）",
                     [
                         column(
                             "Service Plan",
@@ -812,11 +888,12 @@ def build_pages():
                             "サービスプラン品番",
                             display_name="サービスプラン品番",
                         ),
+                    ],
+                    [
                         reportable_enabled_users,
                         measure("Service Entitlement", "利用中ユーザー数"),
                     ],
                     reportable_enabled_users,
-                    word_wrap=True,
                 ),
                 table(
                     "E5CapabilityUserDrilldown",
