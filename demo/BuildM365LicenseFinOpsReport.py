@@ -577,7 +577,27 @@ def pie_chart(name, x, y, width, height, title, category, value):
     )
 
 
-def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap=False):
+def column_widths(values, width, weights):
+    # 既定の自動幅は右側に余白を残すため、コンテナ幅を按分して列幅を固定する。
+    available = width - 34
+    total = sum(weights)
+    sizes = []
+    used = 0
+    for weight in weights[:-1]:
+        size = round(available * weight / total)
+        sizes.append(size)
+        used += size
+    sizes.append(available - used)
+    return [
+        {
+            "properties": {"value": literal(f"{size}D")},
+            "selector": {"metadata": values[index]["queryRef"]},
+        }
+        for index, size in enumerate(sizes)
+    ]
+
+
+def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap=False, weights=None):
     sort = None
     if sort_measure:
         sort = {"field": sort_measure["field"], "direction": "Descending"}
@@ -620,6 +640,9 @@ def table(name, x, y, width, height, title, values, sort_measure=None, word_wrap
     if word_wrap:
         objects["columnHeaders"][0]["properties"]["wordWrap"] = literal("true")
         objects["values"][0]["properties"]["wordWrap"] = literal("true")
+    if weights:
+        objects["columnHeaders"][0]["properties"]["autoSizeColumnWidth"] = literal("false")
+        objects["columnWidth"] = column_widths(values, width, weights)
     return visual_container(
         name,
         "tableEx",
@@ -791,6 +814,7 @@ def build_pages():
                         measure("License Utilization", "# Assigned Seats", "割当数"),
                     ],
                     assigned,
+                    weights=[24, 22, 15, 27, 12],
                 ),
             ],
             "visualInteractions": [
@@ -967,6 +991,7 @@ def build_pages():
                         measure("License Utilization", "利用状態"),
                         measure("License Utilization", "最終利用日"),
                     ],
+                    weights=[22, 20, 15, 14, 14, 15],
                 ),
                 pie_chart(
                     "E5DepartmentShare",
@@ -1080,6 +1105,7 @@ def build_pages():
                         measure("Copilot Usage", "プロンプト数"),
                     ],
                     measure("Copilot Usage", "プロンプト数"),
+                    weights=[26, 24, 16, 18, 16],
                 ),
             ],
         },
