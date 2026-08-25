@@ -24,7 +24,7 @@
     {
       "id": "988bf592-40f8-4f75-b365-b5c451b7be50",
       "question": "E5の機能名と管理センターのサービスプラン品番の対応を見せて",
-      "query": "EVALUATE FILTER(SUMMARIZECOLUMNS('Service Plan'[機能名], 'Service Plan'[サービスプラン品番], \"有効ユーザー\", [有効ユーザー数]), NOT ISBLANK([有効ユーザー])) ORDER BY 'Service Plan'[機能名], 'Service Plan'[サービスプラン品番]"
+      "query": "EVALUATE CALCULATETABLE(SUMMARIZECOLUMNS('Service Plan'[機能名], 'Service Plan'[サービスプラン品番]), KEEPFILTERS('Service Plan'[レポート表示対象] = TRUE())) ORDER BY 'Service Plan'[機能名], 'Service Plan'[サービスプラン品番]"
     },
     {
       "id": "ed53d998-47b3-4e4f-9d86-cdc0b72b3ff7",

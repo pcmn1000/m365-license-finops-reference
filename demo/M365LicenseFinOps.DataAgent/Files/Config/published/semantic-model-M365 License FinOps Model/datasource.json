@@ -748,6 +748,15 @@
           "data_type": "Text",
           "description": "Facts to verify before interpreting the capability configuration.",
           "children": []
+        },
+        {
+          "id": "f01dd9c8-53cc-4bcc-9232-892917bd1718",
+          "is_selected": true,
+          "display_name": "レポート表示対象",
+          "type": "semantic_model.column",
+          "data_type": "True/False",
+          "description": "True only for the 37 raw plan codes grouped into the 25 business capabilities shown in the report. Always filter this to TRUE for business capability mappings.",
+          "children": []
         }
       ]
     },
