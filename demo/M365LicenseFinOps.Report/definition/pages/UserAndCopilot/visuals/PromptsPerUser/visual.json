@@ -3,11 +3,11 @@
   "name": "PromptsPerUser",
   "position": {
     "x": 632,
-    "y": 130,
-    "z": 9000,
+    "y": 82,
+    "z": 5000,
     "height": 148,
     "width": 290,
-    "tabOrder": 9000
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "cardVisual",

@@ -3,11 +3,11 @@
   "name": "AssignedUserDirectory",
   "position": {
     "x": 468,
-    "y": 296,
-    "z": 12000,
-    "height": 404,
+    "y": 246,
+    "z": 8000,
+    "height": 454,
     "width": 788,
-    "tabOrder": 12000
+    "tabOrder": 8000
   },
   "visual": {
     "visualType": "tableEx",

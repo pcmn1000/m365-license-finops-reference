@@ -3,11 +3,11 @@
   "name": "DepartmentOptimization",
   "position": {
     "x": 646,
-    "y": 296,
-    "z": 12000,
-    "height": 404,
+    "y": 246,
+    "z": 8000,
+    "height": 454,
     "width": 610,
-    "tabOrder": 12000
+    "tabOrder": 8000
   },
   "visual": {
     "visualType": "barChart",
@@ -394,5 +394,61 @@
         ]
       }
     }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "NotBlankUserDepartment",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "User"
+              }
+            },
+            "Property": "Department"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "u",
+              "Entity": "User",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "u"
+                            }
+                          },
+                          "Property": "Department"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

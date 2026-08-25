@@ -3,11 +3,11 @@
   "name": "DepartmentAssignments",
   "position": {
     "x": 24,
-    "y": 296,
-    "z": 11000,
-    "height": 404,
+    "y": 246,
+    "z": 7000,
+    "height": 454,
     "width": 430,
-    "tabOrder": 11000
+    "tabOrder": 7000
   },
   "visual": {
     "visualType": "barChart",
@@ -394,5 +394,61 @@
         ]
       }
     }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "NotBlankUserDepartment",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "User"
+              }
+            },
+            "Property": "Department"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "u",
+              "Entity": "User",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "u"
+                            }
+                          },
+                          "Property": "Department"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

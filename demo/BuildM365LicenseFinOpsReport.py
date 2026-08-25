@@ -125,6 +125,50 @@ def column(entity, property_name, active=None, display_name=None):
     return field(entity, property_name, "Column", active, display_name)
 
 
+def not_blank_filter(entity, property_name):
+    source = entity[0].lower()
+    return {
+        "filters": [
+            {
+                "name": f"NotBlank{entity}{property_name}".replace(" ", ""),
+                "field": {
+                    "Column": {
+                        "Expression": {"SourceRef": {"Entity": entity}},
+                        "Property": property_name,
+                    }
+                },
+                "type": "Advanced",
+                "filter": {
+                    "Version": 2,
+                    "From": [{"Name": source, "Entity": entity, "Type": 0}],
+                    "Where": [
+                        {
+                            "Condition": {
+                                "Not": {
+                                    "Expression": {
+                                        "Comparison": {
+                                            "ComparisonKind": 0,
+                                            "Left": {
+                                                "Column": {
+                                                    "Expression": {
+                                                        "SourceRef": {"Source": source}
+                                                    },
+                                                    "Property": property_name,
+                                                }
+                                            },
+                                            "Right": {"Literal": {"Value": "null"}},
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                },
+            }
+        ]
+    }
+
+
 def visual_container(
     name,
     visual_type,
@@ -137,6 +181,7 @@ def visual_container(
     sort=None,
     objects=None,
     container_objects=None,
+    filter_config=None,
 ):
     visual = {
         "visualType": visual_type,
@@ -151,7 +196,7 @@ def visual_container(
             visual["query"]["sortDefinition"] = {
                 "sort": [{"field": sort["field"], "direction": sort["direction"]}]
             }
-    return {
+    container = {
         "$schema": VISUAL_SCHEMA,
         "name": name,
         "position": {
@@ -164,6 +209,9 @@ def visual_container(
         },
         "visual": visual,
     }
+    if filter_config:
+        container["filterConfig"] = filter_config
+    return container
 
 
 def textbox(
@@ -414,6 +462,19 @@ def slicer(name, x, y, width, title, selection):
     )
 
 
+def series_palette(values):
+    if len(values) == 1:
+        return [{"properties": {"fill": solid_color(COLORS["accent"])}}]
+    shades = [COLORS["accent"], COLORS["brand"], COLORS["brand_light"]]
+    return [
+        {
+            "properties": {"fill": solid_color(shades[index % len(shades)])},
+            "selector": {"metadata": value["queryRef"]},
+        }
+        for index, value in enumerate(values)
+    ]
+
+
 def bar_chart(name, x, y, width, height, title, category, values, sort_measure=None):
     query_state = {
         "Category": {"projections": [category]},
@@ -444,7 +505,7 @@ def bar_chart(name, x, y, width, height, title, category, values, sort_measure=N
                 }
             }
         ],
-        "dataPoint": [{"properties": {"fill": solid_color(COLORS["accent"])}}],
+        "dataPoint": series_palette(values),
         "labels": [
             {
                 "properties": {
@@ -467,6 +528,10 @@ def bar_chart(name, x, y, width, height, title, category, values, sort_measure=N
         query_state,
         sort,
         objects,
+        filter_config=not_blank_filter(
+            category["field"]["Column"]["Expression"]["SourceRef"]["Entity"],
+            category["field"]["Column"]["Property"],
+        ),
     )
 
 
@@ -666,14 +731,10 @@ def build_pages():
             "visuals": [
                 canvas_backdrop("ExecutiveBackdrop"),
                 page_header("ExecutiveHeader", "M365 License FinOps", "ライセンス運用サマリー"),
-                section_header("LicenseFilterHeader", 24, 290, "対象ライセンス"),
-                section_header("LocationFilterHeader", 328, 290, "対象拠点"),
-                section_header("UsersHeader", 632, 290, "割当ユーザー"),
-                section_header("CostHeader", 936, 320, "月額コスト"),
                 slicer(
                     "LicenseSkuSlicer",
                     24,
-                    130,
+                    82,
                     290,
                     "ライセンスを選択",
                     column("License SKU", "License Name", True, "ライセンス名"),
@@ -681,7 +742,7 @@ def build_pages():
                 slicer(
                     "OfficeLocationSlicer",
                     328,
-                    130,
+                    82,
                     290,
                     "拠点を選択",
                     column("User", "Office Location", True, "拠点"),
@@ -689,7 +750,7 @@ def build_pages():
                 card(
                     "LicensedUsers",
                     632,
-                    130,
+                    82,
                     290,
                     "ライセンス保有ユーザー",
                     "License Utilization",
@@ -698,7 +759,7 @@ def build_pages():
                 card(
                     "MonthlyCost",
                     936,
-                    130,
+                    82,
                     320,
                     "推定月額コスト",
                     "License Utilization",
@@ -707,9 +768,9 @@ def build_pages():
                 bar_chart(
                     "DepartmentAssignments",
                     24,
-                    296,
+                    246,
                     430,
-                    404,
+                    454,
                     "部門別 割当ユーザー",
                     column("User", "Department", True),
                     [measure("License Utilization", "# Licensed Users")],
@@ -718,9 +779,9 @@ def build_pages():
                 table(
                     "AssignedUserDirectory",
                     468,
-                    296,
+                    246,
                     788,
-                    404,
+                    454,
                     "割当ユーザー一覧",
                     [
                         column("User", "Display Name", display_name="氏名"),
@@ -746,14 +807,10 @@ def build_pages():
             "visuals": [
                 canvas_backdrop("DepartmentBackdrop"),
                 page_header("DepartmentHeader", "M365 License FinOps", "部門別の利用効率"),
-                section_header("DepartmentUsersHeader", 24, 290, "ライセンス"),
-                section_header("DepartmentActiveHeader", 328, 290, "利用状況"),
-                section_header("DepartmentEfficiencyHeader", 632, 290, "利用効率"),
-                section_header("DepartmentOptimizationHeader", 936, 320, "最適化"),
                 card(
                     "DepartmentLicensedUsers",
                     24,
-                    130,
+                    82,
                     290,
                     "ライセンス保有ユーザー",
                     "License Utilization",
@@ -762,7 +819,7 @@ def build_pages():
                 card(
                     "ActiveUsers",
                     328,
-                    130,
+                    82,
                     290,
                     "Activeユーザー",
                     "License Utilization",
@@ -771,7 +828,7 @@ def build_pages():
                 card(
                     "CostPerActiveUser",
                     632,
-                    130,
+                    82,
                     290,
                     "Activeユーザー単価",
                     "License Utilization",
@@ -780,7 +837,7 @@ def build_pages():
                 card(
                     "RecoverableRate",
                     936,
-                    130,
+                    82,
                     320,
                     "削減可能率",
                     "License Utilization",
@@ -789,9 +846,9 @@ def build_pages():
                 bar_chart(
                     "DepartmentSeats",
                     24,
-                    296,
+                    246,
                     610,
-                    404,
+                    454,
                     "部門別 Active / 割り当て",
                     column("User", "Department", True),
                     [
@@ -803,9 +860,9 @@ def build_pages():
                 bar_chart(
                     "DepartmentOptimization",
                     646,
-                    296,
+                    246,
                     610,
-                    404,
+                    454,
                     "部門別 削減可能額",
                     column("User", "Department", True),
                     [recoverable_cost],
@@ -961,14 +1018,10 @@ def build_pages():
             "visuals": [
                 canvas_backdrop("CopilotBackdrop"),
                 page_header("CopilotHeader", "M365 License FinOps", "ユーザー・Copilot利用状況"),
-                section_header("CopilotUsersHeader", 24, 290, "Copilot利用者"),
-                section_header("CopilotPromptsHeader", 328, 290, "プロンプト"),
-                section_header("CopilotDensityHeader", 632, 290, "利用密度"),
-                section_header("M365UsersHeader", 936, 320, "M365利用"),
                 card(
                     "CopilotUsers",
                     24,
-                    130,
+                    82,
                     290,
                     "Copilot Activeユーザー",
                     "Copilot Usage",
@@ -977,7 +1030,7 @@ def build_pages():
                 card(
                     "CopilotPrompts",
                     328,
-                    130,
+                    82,
                     290,
                     "Copilot プロンプト",
                     "Copilot Usage",
@@ -986,7 +1039,7 @@ def build_pages():
                 card(
                     "PromptsPerUser",
                     632,
-                    130,
+                    82,
                     290,
                     "ユーザー当たりプロンプト",
                     "Copilot Usage",
@@ -995,7 +1048,7 @@ def build_pages():
                 card(
                     "M365ActiveUsers",
                     936,
-                    130,
+                    82,
                     320,
                     "M365利用ユーザー",
                     "M365 Usage",
@@ -1004,29 +1057,29 @@ def build_pages():
                 bar_chart(
                     "DepartmentCopilot",
                     24,
-                    296,
+                    246,
                     430,
-                    404,
+                    454,
                     "部門別 Copilotプロンプト",
                     column("User", "Department", True),
-                    [measure("Copilot Usage", "# Copilot Prompts", "プロンプト数")],
-                    measure("Copilot Usage", "# Copilot Prompts"),
+                    [measure("Copilot Usage", "プロンプト数")],
+                    measure("Copilot Usage", "プロンプト数"),
                 ),
                 table(
                     "UserDetails",
                     468,
-                    296,
+                    246,
                     788,
-                    404,
+                    454,
                     "ユーザー利用詳細",
                     [
                         column("User", "Display Name", display_name="氏名"),
                         column("User", "Department", display_name="部門"),
                         column("Copilot Usage", "Last Activity Date", display_name="最終利用日"),
                         column("Copilot Usage", "Active Usage Days", display_name="利用日数"),
-                        measure("Copilot Usage", "# Copilot Prompts", "プロンプト数"),
+                        measure("Copilot Usage", "プロンプト数"),
                     ],
-                    measure("Copilot Usage", "# Copilot Prompts"),
+                    measure("Copilot Usage", "プロンプト数"),
                 ),
             ],
         },

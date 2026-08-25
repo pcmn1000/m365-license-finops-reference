@@ -3,11 +3,11 @@
   "name": "LicenseSkuSlicer",
   "position": {
     "x": 24,
-    "y": 130,
-    "z": 7000,
+    "y": 82,
+    "z": 3000,
     "height": 148,
     "width": 290,
-    "tabOrder": 7000
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "slicer",

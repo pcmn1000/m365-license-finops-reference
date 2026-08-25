@@ -44,6 +44,16 @@ table 'Copilot Usage'
 		formatString: #,##0.0
 		displayFolder: Prompts
 
+	/// 会議室やサービスアカウントを除くため、ライセンス保有者以外は空白を返す。
+	measure 'プロンプト数' = ```
+			IF(
+				[# Licensed Users] > 0,
+				[# Copilot Prompts]
+			)
+			```
+		formatString: #,##0
+		displayFolder: Prompts
+
 	column 'Snapshot Date'
 		dataType: dateTime
 		formatString: yyyy-MM-dd

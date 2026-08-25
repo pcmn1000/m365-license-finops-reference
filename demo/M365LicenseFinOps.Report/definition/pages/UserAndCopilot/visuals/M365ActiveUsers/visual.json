@@ -3,11 +3,11 @@
   "name": "M365ActiveUsers",
   "position": {
     "x": 936,
-    "y": 130,
-    "z": 10000,
+    "y": 82,
+    "z": 6000,
     "height": 148,
     "width": 320,
-    "tabOrder": 10000
+    "tabOrder": 6000
   },
   "visual": {
     "visualType": "cardVisual",
