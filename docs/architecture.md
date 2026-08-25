@@ -86,18 +86,109 @@ Notebook 側で行っているのは、テーブルに保存しないと再現�
 > Teams が含まれない SKU にもかかわらず文字列に `TEAMS` を含むため、
 > 単純な部分一致だと Teams の利用実績を参照して値が空になります。
 
-### 単価の扱い
+## 2. 単価とのマッピング
 
-`dim_sku_price` は次の優先順で決まります。
+Graph は契約単価を返さないため、SKU コードをキーにして外部の単価を結合します。
+
+### 結合キー
+
+| テーブル | キー | 備考 |
+| --- | --- | --- |
+| `dim_sku` | `sku_id` / `sku_part_number` | Graph の `subscribedSkus` から取得 |
+| `dim_sku_price` | `sku_id` | `sku_part_number` を大文字化して単価表と突合 |
+
+Excel 側は `sku_part_number` で書くため、Notebook が大文字化して比較します。
+`Microsoft_365_E5_(no_Teams)` は `MICROSOFT_365_E5_(NO_TEAMS)` として扱われます。
+
+### 単価の決まり方
 
 1. SharePoint 上の `License-Price-Master.xlsx` の `Approved` 行
 2. Notebook に定義されたパブリック定価（JP、年間契約、税抜）
 
 Shortcut が無い、または Excel が読めない場合は 2 が使われるため、
-**SharePoint を用意しなくても構成は動きます**。契約単価が必要になった時点で
-Excel を置けば、そちらが優先されます。
+**SharePoint を用意しなくても構成は動きます**。
 
-## 2. 現行構成の制約
+Notebook に定義されている定価は次のとおりです。
+
+| SKU コード | 表示名 | 月額 (JPY) |
+| --- | --- | --- |
+| `MICROSOFT_365_E5_(NO_TEAMS)` | Microsoft 365 E5 (no Teams) | 7,713 |
+| `MICROSOFT_365_COPILOT` | Microsoft 365 Copilot | 4,497 |
+| `M365_TEAMS_PREMIUM` | Microsoft Teams Premium (add-on) | 1,499 |
+| `MICROSOFT_TEAMS_ENTERPRISE_NEW` | Microsoft Teams Enterprise (base license) | 1,281 |
+
+`FLOW_FREE` は無料 SKU のため単価を持ちません。単価が見つからない SKU は
+`Contract price required` として記録され、コスト計算から外れます。
+
+月額コストは `割り当て数 × 単価` を DAX メジャーで計算します。
+`dim_sku_price` は有効期間を持たず、当日の単価だけを保持します。
+
+## 3. 製品とサービスプランのマッピング
+
+Graph は SKU に含まれるサービスプランを内部コードで返します。
+そのままでは読めないため、2段階で変換しています。
+
+```text
+subscribedSkus[].servicePlans[]        Graph の内部コード (124件)
+        ↓ bridge_sku_service_plan      SKU とプランの対応
+        ↓ dim_service_plan             日本語の業務機能へ集約 (37件 → 25機能)
+Power BI                               機能名 ＋ 一般製品名で表示
+```
+
+### テーブルの役割
+
+| テーブル | 内容 |
+| --- | --- |
+| `bridge_sku_service_plan` | どの SKU にどのサービスプランが含まれるか |
+| `dim_service_plan` | 内部コード、日本語の機能名、カテゴリ、確認ポイント |
+| `fact_service_entitlement` | ユーザー×サービスプランの有効/無効 |
+
+### 内部コードから機能名への変換
+
+`dim_service_plan` には Graph が返した 124 件すべてが入りますが、
+日本語名を付けているのは E5 の判断に関係する 37 件です。
+これを 25 の業務機能へ集約します。`レポート表示対象` 列で絞り込みます。
+
+機能名は `用途（一般製品名）` の形にしています。
+
+| カテゴリ | 機能名の例 |
+| --- | --- |
+| ID管理 | 高度なID保護・特権管理（Microsoft Entra ID P2） |
+| セキュリティ | 端末の脅威検知・対応（Microsoft Defender for Endpoint Plan 2） |
+| 情報保護 | 機密ラベル・自動分類（Microsoft Purview Information Protection） |
+| 法務・監査 | 法務調査・電子情報開示（Microsoft Purview eDiscovery Premium） |
+| 通話・会議 | Teams電話・クラウドPBX（Microsoft Teams Phone Standard） |
+| 分析 | Power BIの共有・共同作業（Power BI Pro） |
+
+### 1つの機能に複数の品番が対応する
+
+同じ業務機能が複数の内部コードで構成されることがあります。
+37 件を 25 機能へ集約しているのはこのためです。
+
+| 機能名 | 内部コード |
+| --- | --- |
+| 機密ラベル・自動分類 | 4件 |
+| 働き方の高度分析 | 3件 |
+| 法務調査・電子情報開示 | 3件 |
+| クラウドアプリの監視・制御 | `ADALLOM_S_O365` / `ADALLOM_S_STANDALONE` |
+| Microsoftのデータアクセス承認 | `CustomerLockboxA_Enterprise` / `LOCKBOX_ENTERPRISE` |
+
+Power BI ではマトリックスの階層にしており、機能名を展開すると
+管理センターで使われる品番が確認できます。
+
+### 有効/無効の判定
+
+`fact_service_entitlement` の `is_enabled` は、Graph の
+`assignedLicenses[].disabledPlans` にそのプランが**含まれていないか**で決まります。
+管理センターの「ライセンスとアプリ」のチェック状態と一致します。
+
+1つの機能を構成する内部コードが複数ある場合、Power BI 側では
+すべて有効なら `有効`、1つでも無効なら `無効` と表示します。
+
+これはライセンス設定であり、実際に使ったかどうかではありません。
+利用実績は `fact_license_utilization` の `利用状態` で別に見ます。
+
+## 4. 現行構成の制約
 
 単純にしたぶん、次のことはできません。前提として押さえておく項目です。
 
@@ -108,43 +199,7 @@ Excel を置けば、そちらが優先されます。
 | 取得 | `/users` 全件 | ユーザー数が数万規模になったときの実行時間短縮 |
 | 実行制御 | なし | 件数・エラーの履歴を残すこと |
 | 集計 | DAXメジャー | 大規模データでの計算負荷の分散 |
+| 単価 | 当日の値のみ | 過去の単価での再計算 |
 | 組織マスタ | Entra の値のみ | コストセンター単位の配賦 |
 | 通知 | なし | 異常の自動検知 |
 | 単価承認 | 手動実行 | 承認と同時の自動反映 |
-
-数千ユーザー規模で、部門別・拠点別のコスト把握と E5 の使われ方の確認が目的なら、
-これらは無くても成立します。
-
-## 3. E3/E5右サイジング
-
-判定は単純な最終利用日だけでは行いません。レポートでは
-「要確認候補」までを示し、解約判断は人が行う前提にしています。
-
-### E5→E3候補
-
-- E5固有の能動サービス利用が一定期間ない
-- E5固有サービスプランが無効、またはプロビジョニング対象外
-- Teams Phone、Power BI Pro、PIM、Defender、Purview等の必要性が確認されていない
-- 例外リスト、法務・監査ポリシー、特権ロール対象外
-- E3との差額と変更影響を算出できる
-
-### E3→E5候補
-
-- E5相当のアドオンを複数個別購入している
-- 特権ユーザーだがPIM/高度なID保護が必要
-- Purview/Defenderポリシーの対象だが必要な権利が不足
-- Teams Phoneや高度な分析など、明確な業務要件がある
-
-### 表示ルール
-
-- 「自動解約」ではなく「要確認候補」と表示
-- Graphの内部プラン名は監査用に保持し、通常画面では日本語の業務機能へ集約
-- 技術・付帯プランはE5/E3判断画面から除外
-- サービスプランの有効化は設定シグナルであり、利用実績として扱わない
-- 推定削減額と、判断に使えなかった情報を併記
-
-## 4. Power BIとData Agent
-
-- Direct LakeモデルはLakehouseのテーブルを直接参照
-- 指標は DAX メジャーで定義し、テーブルには持たせない
-- Data Agentには右サイジングを断定しない指示と、コストが推定か契約単価かを明示する指示を設定
