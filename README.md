@@ -1,17 +1,20 @@
 # Microsoft 365 License FinOps Reference Architecture
 
 Microsoft 365 のライセンス在庫、ユーザー割り当て、サービス利用状況、契約単価を
-Microsoft Fabric に統合し、Power BI と Fabric Data Agent から分析するための
-リファレンス構成です。
+Microsoft Fabric に統合し、Power BI から分析する構成です。
 
-この構成は次の問いに答えることを目的とします。
+**動くものと、その作り方を丸ごと共有するためのリポジトリです。**
+Notebook のソース、セマンティックモデルの TMDL、レポートの PBIR、Pipeline の定義、
+環境固有IDを置換してFabricへ配置するスクリプトが入っています。
+[構築手順](docs/setup.md) に沿えば、自分のテナントに同じものを作れます。
+
+この構成は次の問いに答えます。
 
 - 何を何ライセンス購入し、誰に割り当てているか
 - ID保護、脅威対策、法務・監査など、E5の高度機能が誰に有効か
-- Exchange、Teams、OneDrive、SharePoint、Office アプリ、Copilot を利用しているか
-- 部門、拠点、会社、コストセンター別にいくら負担しているか
+- Exchange、Teams、OneDrive、SharePoint、Copilot を利用しているか
+- 部門、拠点別にいくら負担しているか
 - 未利用、低利用のライセンスはどれくらいあるか
-- 契約更新時に何ライセンス必要か
 
 > [!IMPORTANT]
 > Microsoft Graph のライセンス API は契約単価を返しません。また、Microsoft 365
@@ -42,14 +45,12 @@ flowchart LR
 
     subgraph USE["利用"]
         PBI["Power BI レポート<br/>4ページ"]
-        AGENT["Fabric Data Agent"]
     end
 
     GRAPH --> NB1 --> LH
     SPO --> SC --> NB2 --> LH
     PIPE --> NB1
     LH --> MODEL --> PBI
-    MODEL --> AGENT
 ```
 
 ### 作ったもの
@@ -62,10 +63,10 @@ flowchart LR
 | Pipeline | `DailyM365LicenseSync` | Notebookを日次実行 |
 | Semantic model | `M365 License FinOps Model` | Direct Lake |
 | Report | `M365 License FinOps Report` | 4ページ / 34ビジュアル |
-| Data Agent | `M365LicenseFinOpsAgent` | 自然言語Q&A |
 
 Fabric 容量は F8 (Japan East) です。Graph のアプリケーション権限は
-`User.Read.All`、`Organization.Read.All`、`Reports.Read.All` の3つで足ります。
+`User.Read.All`、`LicenseAssignment.Read.All`、`Organization.Read.All`、
+`Reports.Read.All` の4つです。
 
 ### Lakehouseのテーブル
 
@@ -92,9 +93,9 @@ Bronze/Silver/Gold のような層は作らず、10本のDeltaテーブルをフ
 上記のうち、Notebook 1本と Lakehouse と Power BI だけあれば動きます。
 
 1. Fabric ワークスペースと Lakehouse を作る
-2. Entra ID にアプリ登録し、Graph のアプリケーション権限3つを付与する
-3. Notebook に `SyncM365LicenseUsage` を貼り、実行する
-4. Direct Lake でセマンティックモデルを作り、レポートを作る
+2. Entra ID にアプリ登録し、Graph のアプリケーション権限4つを付与する
+3. Key Vault に Graph アプリのシークレットを登録する
+4. `tools/deploy_fabric_items.ps1` を実行する
 
 単価が不要なら SharePoint と Shortcut と `SyncM365PriceMaster` は省略できます。
 Notebook にはパブリック定価が定義済みで、Excel が無ければそのまま使われます。
@@ -116,13 +117,27 @@ Pipeline も後回しにして、まず手動実行で構いません。
 
 ## ドキュメント
 
-- [詳細アーキテクチャ](docs/architecture.md) — 取得API、書き込み方式、テーブル、制約
+- [構築手順](docs/setup.md) — 自分のテナントに同じものを作る手順
+- [詳細アーキテクチャ](docs/architecture.md) — 取得API、書き込み方式、テーブル、単価とサービスプランのマッピング
 - [Microsoft Graph / API取得範囲](docs/api-capabilities.md)
 - [単価マスタとSPO Shortcut](docs/price-master.md)
 - [人・部門・拠点・コストセンターの管理](docs/master-data.md)
 - [運用、監視、セキュリティ](docs/operations.md)
 - [デモ環境への反映](docs/demo-implementation.md)
-- [お客様説明用トークトラック](docs/customer-talk-track.md)
+
+## リポジトリの構成
+
+| パス | 内容 |
+| --- | --- |
+| `demo/SyncM365LicenseUsage.py` | Graph取得とLakehouse書き込みのNotebookソース |
+| `demo/SyncM365PriceMaster.py` | SPOのExcelを検証して単価へ反映するNotebookソース |
+| `demo/BuildM365LicenseFinOpsReport.py` | PBIRレポートを生成するスクリプト |
+| `demo/M365LicenseFinOps.SemanticModel/` | Direct LakeモデルのTMDL一式 |
+| `demo/M365LicenseFinOps.Report/` | レポートのPBIR一式 |
+| `demo/pipeline-content.json` | 日次Pipelineの定義 |
+| `tools/deploy_fabric_items.ps1` | 環境IDを置換し、Fabricアイテムを作成・更新するスクリプト |
+| `tools/create_price_master.py` | 単価マスタExcelの生成スクリプト |
+| `sample-data/License-Price-Master.xlsx` | 単価マスタの記入例 |
 
 ## 設計上の結論
 
@@ -135,7 +150,6 @@ Pipeline も後回しにして、まず手動実行で構いません。
 ## 公式リファレンス
 
 - [List subscribedSkus](https://learn.microsoft.com/graph/api/subscribedsku-list)
-- [Get incremental changes for users](https://learn.microsoft.com/graph/delta-query-users)
 - [Microsoft 365 usage reports overview](https://learn.microsoft.com/graph/api/resources/report)
 - [OneLake shortcuts](https://learn.microsoft.com/fabric/onelake/onelake-shortcuts)
 - [Create a OneDrive or SharePoint shortcut](https://learn.microsoft.com/fabric/onelake/create-onedrive-sharepoint-shortcut)

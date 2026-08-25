@@ -1,78 +1,118 @@
 # Microsoft Graph / API取得範囲
 
-## APIカタログ
+`SyncM365LicenseUsage` Notebook が実際に呼ぶ API は4本です。
+初回も日次も同じ API を全件取得します。
 
-| API | 取得できる主な情報 | 主な権限 | 鮮度/制約 |
+## 使用しているAPI
+
+| API | 取得するもの | 権限 | 主な保存先 |
 | --- | --- | --- | --- |
-| `GET /subscribedSkus` | SKU ID/コード、購入数、消費数、状態、含まれるサービスプラン | `Organization.Read.All` | 数量・権利。契約単価、請求額、割引率は取得不可 |
-| `GET /users?$select=...` | UPN、表示名、部門、役職、会社、拠点、アカウント状態、割当SKU | `User.Read.All`、ライセンス詳細には`LicenseAssignment.Read.All` | 現在値。変更履歴は返さない |
-| `GET /users/delta?$select=...` | 新規・更新・削除ユーザーの差分 | `User.Read.All` | 準リアルタイムのポーリング用。deltaLinkの保存が必要 |
-| `GET /users/{id}/licenseDetails` | SKUごとのサービスプラン名、プロビジョニング状態 | `LicenseAssignment.Read.All` | ユーザー単位。全員へのN+1呼び出しは避ける |
-| `licenseAssignmentStates` | 直接/グループ割り当て、状態、エラー、更新日時、割当元グループ | `LicenseAssignment.Read.All` | `/users`の`$select`で取得。ライセンス運用監査に有効 |
-| `GET /groups` / `members` | グループベースライセンスの割当元とメンバー | `Group.Read.All` | 大規模グループは差分取得とページングを設計 |
-| `getOffice365ActiveUserDetail` | Exchange、OneDrive、SharePoint、Teamsの最終利用日、割当製品 | `Reports.Read.All` | `D7/D30/D90/D180`。日次レポートでリアルタイムではない |
-| `getM365AppUserDetail` | Word、Excel、PowerPoint、Outlook、OneNote、Teams等のアプリ利用とプラットフォーム | `Reports.Read.All` | Usage Reportsの更新周期に依存 |
-| Teams user activity detail | チャット、会議、通話、投稿等のユーザー別集計 | `Reports.Read.All` | 集計レポート。メッセージ本文やリアルタイム操作ログではない |
-| Exchange activity detail | 送信、受信、既読などのユーザー別集計 | `Reports.Read.All` | レポート定義と保持期間に従う |
-| OneDrive usage account detail | 最終活動日、ファイル数、使用量 | `Reports.Read.All` | 個別ファイルの閲覧履歴ではない |
-| SharePoint activity user detail | 最終活動日、閲覧/編集/同期等の集計 | `Reports.Read.All` | サイト監査ログとは目的が異なる |
-| Copilot usage user detail | 最終利用日、アプリ別プロンプト、利用日数等 | `Reports.Read.All` | APIバージョンと提供項目が変わる可能性がある |
-| Graph audit/sign-ins | サインイン、監査イベント | `AuditLog.Read.All`等 | ライセンス利用実績の代替にはしない |
-| Azure Cost Management Exports | Azure利用料、予約、Marketplace、タグ、請求明細 | Azure RBAC | Microsoft 365 seat契約の単価/請求とは別 |
+| `GET /users?$select=...` | ユーザー、組織属性、割り当て、無効化プラン | `User.Read.All`、`LicenseAssignment.Read.All` | `dim_user`、`fact_license_assignment`、`fact_service_entitlement` |
+| `GET /subscribedSkus?$select=...` | SKU、購入/消費数、サービスプラン | `Organization.Read.All` | `dim_sku`、`dim_service_plan`、`bridge_sku_service_plan` |
+| `getOffice365ActiveUserDetail(period='D180')` | M365サービス別の最終利用日 | `Reports.Read.All` | `fact_m365_usage`、`fact_license_utilization` |
+| `getMicrosoft365CopilotUsageUserDetail(period='D180',version='v2')` | Copilot最終利用日、プロンプト数、利用日数 | `Reports.Read.All` | `fact_copilot_usage`、`fact_license_utilization` |
 
-## `/subscribedSkus`で分かること
-
-取得可能:
-
-- `skuId`、`skuPartNumber`
-- `prepaidUnits.enabled/suspended/warning`
-- `consumedUnits`
-- `capabilityStatus`
-- `servicePlans[].servicePlanId/servicePlanName/provisioningStatus/appliesTo`
-
-取得不可:
-
-- 顧客契約単価、値引率、通貨
-- 請求書金額、契約番号、更新日
-- E3など未契約SKUの価格とサービス構成
-- サービスプラン単位の金額
-
-したがって、契約単価は財務/調達が管理する外部マスタが必要です。CSPの場合は
-Partner Center APIを別途検討できますが、一般のGraphライセンスAPIとは分けます。
-
-## 組織属性として取得しているプロパティ
+## `/users` から取得する項目
 
 ```http
 GET /users?$select=id,userPrincipalName,displayName,department,jobTitle,
-companyName,officeLocation,accountEnabled,assignedLicenses
+companyName,officeLocation,country,city,employeeId,employeeOrgData,
+accountEnabled,userType,assignedLicenses,licenseAssignmentStates&$top=999
 ```
 
-`employeeOrgData` の `division` や `costCenter` は現行では取得していません。
-manager はナビゲーションプロパティのため、必要なら別途取得が必要です。
-
-## 現行で使っている取得方式
-
-| 処理 | 方式 |
+| Graph項目 | 保存・利用方法 |
 | --- | --- |
-| 初回も日次も同じ | `/users`全件 + `/subscribedSkus` + Usage Reports + Copilot Reports |
+| `id` | 全テーブルを結ぶ `user_id` |
+| `userPrincipalName` / `displayName` | ユーザー識別とレポート表示 |
+| `department` / `jobTitle` / `companyName` | 部門・役職・会社 |
+| `officeLocation` / `country` / `city` | 拠点・地域 |
+| `employeeId` | 社員番号 |
+| `employeeOrgData.division` / `costCenter` | 事業部・コストセンター |
+| `accountEnabled` / `userType` | 無効アカウント、Member/Guestの判別 |
+| `assignedLicenses[].skuId` | ユーザー×SKUの割り当て |
+| `assignedLicenses[].disabledPlans` | サービスプランの有効/無効判定 |
+| `licenseAssignmentStates` | 直接/グループ割り当て、状態、割当元グループ、更新日時 |
 
-差分取得 (`/users/delta`) は使っていません。全件取得のほうが deltaLink の
-保存や取りこぼしの照合が不要で、数千ユーザー規模なら実行時間も問題になりません。
+値が空の部門・拠点・役職・会社・事業部・コストセンターは `Unassigned` として保存します。
 
-Graph呼び出しではページングと 429/503/504 の指数バックオフを行っています。
+## `/subscribedSkus` から取得する項目
 
-## プライバシー設定
+```http
+GET /subscribedSkus?$select=skuId,skuPartNumber,capabilityStatus,
+consumedUnits,prepaidUnits,servicePlans
+```
 
-Usage ReportsはMicrosoft 365管理センターの設定によりユーザー名が匿名化される場合が
-あります。匿名化された状態ではUPN結合ができないため、ユーザー別の利用実績は
-取得できません。プライバシー要件と分析要件を合意したうえで設定を決めます。
+| Graph項目 | 保存・利用方法 |
+| --- | --- |
+| `skuId` / `skuPartNumber` | SKUの内部IDと単価表との結合キー |
+| `prepaidUnits.enabled` | 購入数 |
+| `consumedUnits` | 割り当て済み数 |
+| `capabilityStatus` | SKUの状態 |
+| `servicePlans[].servicePlanId` | サービスプランID |
+| `servicePlans[].servicePlanName` | 管理センターで使われる品番 |
+| `servicePlans[].provisioningStatus` | SKU内でのプロビジョニング状態 |
+| `servicePlans[].appliesTo` | 適用対象 |
+
+購入数から消費数を引いて空き数を作ります。SKU とサービスプランの多対多関係は
+`bridge_sku_service_plan` に保存します。
+
+## Usage Reports から取得する項目
+
+### Microsoft 365
+
+`getOffice365ActiveUserDetail` から次を取得します。
+
+- レポート更新日
+- UPN
+- Exchange、OneDrive、SharePoint、Teams の最終利用日
+- 割り当て製品
+- レポート期間
+
+4サービスのうち最も新しい日を `overall_last_activity_date` として保存します。
+
+### Microsoft 365 Copilot
+
+`getMicrosoft365CopilotUsageUserDetail` v2 から次を取得します。
+
+- レポート更新日
+- UPN
+- Copilotの最終利用日
+- 全アプリ、Work、Webのプロンプト数
+- 利用日数
+- レポート期間
+
+API がテナントで利用できない場合は 400/403/404 を許容し、Copilot利用行を空にして
+ライセンス在庫の同期を継続します。
+
+## APIでは取得できないもの
+
+Microsoft Graph のライセンス API は次を返しません。
+
+- 顧客契約単価、値引率、通貨
+- 請求書金額、契約番号、更新日
+- 未契約SKUの価格
+- サービスプラン単位の金額
+
+単価は `skuPartNumber` をキーに SharePoint の Excel または Notebook 内の定価と結合します。
+詳細は [単価マスタとSPO Shortcut](price-master.md) を参照してください。
+
+## 取得方法とエラー処理
+
+- `/users` と `/subscribedSkus` は `@odata.nextLink` をたどって全件取得
+- 429/503/504 は `Retry-After` または指数バックオフで再試行
+- `/users/delta` は使用しない
+- Usage Reports は D180 を日次取得し、`reportRefreshDate` を保存
+- 同じ `snapshot_date` の行を削除してから追記
+
+## Usage Reportsの匿名化
+
+Microsoft 365管理センターの設定でユーザー名が匿名化されていると、UPNで
+`dim_user` と結合できません。Notebook は匿名化を検出すると Usage 行を空にし、
+ライセンス在庫・割り当て・サービスプランの同期だけを継続します。
 
 ## 公式リファレンス
 
-- [subscribedSku resource](https://learn.microsoft.com/graph/api/resources/subscribedsku)
+- [List users](https://learn.microsoft.com/graph/api/user-list)
 - [List subscribedSkus](https://learn.microsoft.com/graph/api/subscribedsku-list)
-- [user resource](https://learn.microsoft.com/graph/api/resources/user)
-- [Get incremental changes for users](https://learn.microsoft.com/graph/delta-query-users)
-- [licenseDetails](https://learn.microsoft.com/graph/api/user-list-licensedetails)
-- [Reports resource](https://learn.microsoft.com/graph/api/resources/report)
-- [Microsoft 365 Apps usage reports](https://learn.microsoft.com/microsoft-365/admin/activity-reports/microsoft365-apps-usage)
+- [Microsoft 365 usage reports overview](https://learn.microsoft.com/graph/api/resources/report)
+- [Microsoft 365 Copilot usage reports](https://learn.microsoft.com/graph/api/reportroot-getmicrosoft365copilotusageuserdetail)
