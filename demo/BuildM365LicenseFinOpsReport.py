@@ -1075,8 +1075,8 @@ def build_pages():
                     [
                         column("User", "Display Name", display_name="氏名"),
                         column("User", "Department", display_name="部門"),
-                        column("Copilot Usage", "Last Activity Date", display_name="最終利用日"),
-                        column("Copilot Usage", "Active Usage Days", display_name="利用日数"),
+                        measure("License Utilization", "利用状態"),
+                        measure("License Utilization", "最終利用日"),
                         measure("Copilot Usage", "プロンプト数"),
                     ],
                     measure("Copilot Usage", "プロンプト数"),

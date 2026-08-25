@@ -396,31 +396,29 @@
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Copilot Usage"
+                      "Entity": "License Utilization"
                     }
                   },
-                  "Property": "Last Activity Date"
+                  "Property": "利用状態"
                 }
               },
-              "queryRef": "Copilot Usage.Last Activity Date",
-              "displayName": "最終利用日"
+              "queryRef": "License Utilization.利用状態"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Copilot Usage"
+                      "Entity": "License Utilization"
                     }
                   },
-                  "Property": "Active Usage Days"
+                  "Property": "最終利用日"
                 }
               },
-              "queryRef": "Copilot Usage.Active Usage Days",
-              "displayName": "利用日数"
+              "queryRef": "License Utilization.最終利用日"
             },
             {
               "field": {

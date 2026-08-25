@@ -856,9 +856,11 @@ for assignment in license_assignment_rows:
     upn = (user.get("user_principal_name") or "").lower()
     sku_part_number = (sku.get("sku_part_number") or "").upper()
     m365_usage = m365_usage_by_upn.get(upn, {})
+    # "Microsoft_365_E5_(no_Teams)" のような Teams 非同梱 SKU を誤検出しないよう除外する。
+    is_teams_sku = "TEAMS" in sku_part_number and "NO_TEAMS" not in sku_part_number
     if "COPILOT" in sku_part_number:
         last_activity_date = copilot_usage_by_upn.get(upn, {}).get("last_activity_date")
-    elif "TEAMS" in sku_part_number:
+    elif is_teams_sku:
         last_activity_date = m365_usage.get("teams_last_activity_date")
     else:
         last_activity_date = m365_usage.get("overall_last_activity_date")
