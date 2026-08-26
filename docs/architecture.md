@@ -87,6 +87,22 @@ flowchart LR
 `tools/deploy_public_report.ps1` は元のTMDLをメモリ上でImportパーティションへ変換します。
 Direct Lakeモデル、Data Agent、PBIRのソース定義は変更しません。
 
+更新不要のデモでは、さらにImportモデルから最新スナップショットを一度だけ書き出し、
+GitHub Pagesへ静的配信します。この経路は閲覧時にFabricへ接続しません。
+
+```mermaid
+flowchart LR
+        IMPORT["公開用Importモデル"]
+        EXPORT["固定データ書き出し<br/>data.js"]
+        SITE["GitHub Pages<br/>HTML / CSS / JavaScript"]
+        BROWSER["ブラウザー<br/>フィルター・ドリルダウン"]
+
+        IMPORT --> EXPORT --> SITE --> BROWSER
+```
+
+グラフ、KPI、テーブル、階層展開はブラウザー内で再計算します。
+データ更新、Power BI固有の編集、Copilot、Data Agentは固定版の対象外です。
+
 ### データが回答になるまで
 
 ```mermaid

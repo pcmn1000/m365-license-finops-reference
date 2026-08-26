@@ -26,6 +26,10 @@ Lakehouse の Delta テーブルは10本で、Bronze/Silver/Gold のような層
 
 [M365 License FinOps Public Report](https://app.powerbi.com/view?r=eyJrIjoiN2M2NWFlYTMtYTNhNC00ODA0LTk2MTYtMTEwNTJjOWYxNThkIiwidCI6IjFhZDFjY2Y1LTU5YjgtNDc0ZS1iYjg5LWVlMDBjOTFlZGQ0OCJ9)
 
+容量非依存の固定デモURL:
+
+[M365 License FinOps Interactive Demo](https://pcmn1000.github.io/m365-license-finops-reference/)
+
 ```text
 dim_user  dim_sku  dim_sku_price  dim_service_plan  bridge_sku_service_plan
 fact_license_assignment  fact_service_entitlement  fact_license_utilization

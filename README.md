@@ -11,6 +11,11 @@ Pipeline の定義、環境固有IDを置換してFabricへ配置するスクリ
 デモレポートは匿名で閲覧できます。
 [M365 License FinOps Public Report](https://app.powerbi.com/view?r=eyJrIjoiN2M2NWFlYTMtYTNhNC00ODA0LTk2MTYtMTEwNTJjOWYxNThkIiwidCI6IjFhZDFjY2Y1LTU5YjgtNDc0ZS1iYjg5LWVlMDBjOTFlZGQ0OCJ9)
 
+Fabric容量を停止していても操作できる固定データ版もあります。
+[M365 License FinOps Interactive Demo](https://pcmn1000.github.io/m365-license-finops-reference/)
+は4ページ、フィルター、グラフ選択、ユーザー詳細、
+`E5機能 → サービスプラン品番 → ユーザー`の階層展開をブラウザーだけで実行します。
+
 この構成は次の問いに答えます。
 
 - 何を何ライセンス購入し、誰に割り当てているか
@@ -168,6 +173,8 @@ Pipeline も後回しにして、まず手動実行で構いません。
 | `demo/pipeline-content.json` | 日次Pipelineの定義 |
 | `tools/deploy_fabric_items.ps1` | 環境IDを置換し、Fabricアイテムを作成・更新するスクリプト |
 | `tools/deploy_public_report.ps1` | TMDLを実行時にImportへ変換し、Web公開専用モデルとレポートを配置 |
+| `tools/export_static_demo_data.ps1` | 最新スナップショットをGitHub Pages用の固定データへ書き出すスクリプト |
+| `docs/index.html` / `docs/static-demo/` | 容量非依存の対話型固定データレポート |
 | `tools/create_price_master.py` | 単価マスタExcelの生成スクリプト |
 | `sample-data/License-Price-Master.xlsx` | 単価マスタの記入例 |
 

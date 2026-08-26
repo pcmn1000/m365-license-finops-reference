@@ -264,6 +264,32 @@ pwsh -File .\tools\deploy_public_report.ps1 `
 > Web公開URLを知る人は、認証なしでセマンティックモデル内の全データへアクセスできます。
 > 個人情報、機密情報、RLSで保護すべきデータには使用しないでください。
 
+### Fabric容量に依存しない固定デモを公開する
+
+Power BIのWeb公開はFabric容量の停止中に利用できません。更新不要のデモでは、
+最新スナップショットを固定データとして書き出し、`docs/`をGitHub Pagesで配信できます。
+
+```powershell
+pwsh -File .\tools\export_static_demo_data.ps1 `
+   -WorkspaceId <workspace-id> `
+   -SemanticModelId <semantic-model-id> `
+   -SubscriptionId <azure-subscription-id>
+```
+
+このコマンドは最新日の利用、割り当て、M365/Copilot利用、E5機能設定だけを
+`docs/static-demo/data.js`へ出力します。ブラウザー側ではFabric APIを呼びません。
+
+GitHubリポジトリの **Settings** > **Pages** で、`main`ブランチの`/docs`を公開元にします。
+公開後は次のURLで開けます。
+
+```text
+https://<github-user>.github.io/<repository>/
+```
+
+固定版はページ切替、フィルター、グラフ選択、部門・ユーザー詳細、
+`機能名 → サービスプラン品番 → ユーザー`のドリルダウンに対応します。
+データを更新しない限り、Azure/Fabric容量を停止しても表示できます。
+
 ## 10. 動作確認
 
 - Lakehouse に10本のテーブルがあり、`snapshot_date` が当日になっている
@@ -275,6 +301,7 @@ pwsh -File .\tools\deploy_public_report.ps1 `
 - Data Agentが機能の有効化を実利用と断定しない
 - Agent Storeへ公開した場合、Microsoft 365 CopilotでAgent名を検索または`@`指定できる
 - Web公開した場合、サインアウト状態で4ページを表示できる
+- 固定デモを公開した場合、Fabric容量に依存せず4ページと階層展開を操作できる
 
 ## つまずきやすいところ
 
