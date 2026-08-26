@@ -11,7 +11,6 @@ Notebook、セマンティックモデル、レポート、Data Agent、Pipeline
 | --- | --- |
 | Fabric 容量 (F SKU) | Lakehouse、Notebook、Direct Lake |
 | Microsoft 365 テナントの全体管理者 | Entra アプリ登録、Graph 権限の同意 |
-| Azure サブスクリプション | Key Vault |
 | Azure CLI | Fabric API の認証 |
 | PowerShell 7 | デプロイスクリプトの実行 |
 
@@ -43,15 +42,30 @@ Graph をアプリケーション権限で呼ぶための登録です。
 - 証明書とシークレット > クライアントシークレットを作成し、値を控える
 - アプリケーション (クライアント) ID とディレクトリ (テナント) ID を控える
 
-## 2. Key Vault にシークレットを入れる
+## 2. Fabric Web接続を作る
 
-クライアントシークレットを Notebook に直書きしないため、Key Vault を使います。
+クライアントシークレットをNotebookやGitへ保存せず、Fabric Web接続の資格情報として
+暗号化して保管します。Azure Key Vaultは使用しません。
 
-1. Key Vault を作成する
-2. シークレット名 `graph-client-secret` で手順 1 の値を登録する
-3. Notebook と Pipeline を実行するユーザーに `Key Vault シークレット ユーザー` を付与する
+> [!NOTE]
+> NotebookからFabric接続を使う機能はプレビューです。組織でプレビュー機能を
+> 許可しない場合は、この方式ではなくKey Vaultなどの外部シークレットストアが必要です。
 
-Key Vault のファイアウォールで Fabric からのアクセスを遮断していないことも確認します。
+通常は手順4のデプロイスクリプトに任せます。同名の接続がない場合だけ、
+PowerShellがクライアントシークレットを非表示で入力するよう求め、次の接続を作成します。
+
+- 接続名: `M365 FinOps Microsoft Graph`
+- 接続タイプ: `Web`
+- URL: `https://graph.microsoft.com/v1.0`
+- 認証: サービスプリンシパル
+- Code-First Artifactsからの使用: 有効
+
+スクリプトは入力値をログやファイルへ出力せず、API送信後に変数参照を解除します。
+リポジトリやNotebook定義には残りません。
+実行時にNotebookへ渡るのはFabricが取得した短期のAccessTokenで、
+クライアントシークレットそのものはNotebookへ渡りません。
+既存のグローバル接続を明示する必要がある場合は、接続IDを
+`-GraphDataSourceId` で渡せます。
 
 ## 3. Fabric ワークスペースと Lakehouse を作る
 
@@ -82,21 +96,40 @@ pwsh -File .\tools\deploy_fabric_items.ps1 `
    -LakehouseName M365LicenseFinOps `
    -TenantId <tenant-id> `
    -ClientId <graph-app-client-id> `
-   -KeyVaultUrl https://<your-vault>.vault.azure.net/ `
    -SubscriptionId <azure-subscription-id>
 ```
 
 スクリプトは次を順番に行います。
 
-1. `SyncM365LicenseUsage` Notebook の環境値をメモリ上で置換して作成・更新
-2. Notebook を実行して Lakehouse の10テーブルを作成・更新
-3. TMDL の OneLake 接続先を置換してセマンティックモデルを作成・更新
-4. PBIR のセマンティックモデル ID を置換してレポートを作成・更新
-5. Data Agent のセマンティックモデル ID を置換して作成・更新
-6. Notebook ID を置換して `DailyM365LicenseSync` Pipeline を作成・更新
+1. Graph用のFabric Web接続を検索し、なければ安全な対話入力で作成
+2. `SyncM365LicenseUsage` Notebook の環境値をメモリ上で置換して作成・更新
+3. Notebook専用接続IDが指定されていれば、Notebookを実行して10テーブルを更新
+4. TMDL の OneLake 接続先を置換してセマンティックモデルを作成・更新
+5. PBIR のセマンティックモデル ID を置換してレポートを作成・更新
+6. Data Agent のセマンティックモデル ID を置換して作成・更新
+7. Notebook ID を置換して `DailyM365LicenseSync` Pipeline を作成・更新
 
 同名アイテムが既にあれば更新し、なければ作成します。リポジトリ内のソースファイルは
-書き換えません。初回の Notebook 実行を省略する場合だけ `-SkipNotebookRun` を付けます。
+書き換えません。初回はNotebook専用接続IDがないため、自動実行を保留します。
+
+### 初回だけGraph接続をNotebookへ関連付ける
+
+Fabricではグローバル接続をNotebookへConnectすると、Notebook専用の別IDが発行されます。
+初回は次の手順でそのIDを取得します。
+
+1. Fabricポータルで `SyncM365LicenseUsage` を開く
+2. **Connections** > **Global permissions** を開く
+3. `M365 FinOps Microsoft Graph` のメニューから **Connect** を選ぶ
+4. 接続が **Current Notebook** に表示されたことを確認する
+5. 接続のメニューから **Copy ID** を選び、Notebook専用接続IDを控える
+6. 手順4と同じコマンドへ次を追加して、デプロイスクリプトを再実行する
+
+```powershell
+   -GraphConnectionId <notebook-connection-id>
+```
+
+2回目の実行でNotebook定義へ専用IDを設定し、Lakehouseを同期します。
+関連付けはNotebookごとに1回だけ必要です。Notebookの定義更新後も接続は維持されます。
 
 完了すると Lakehouse に10本のテーブルができます。
 
@@ -150,7 +183,6 @@ pwsh -File .\tools\deploy_fabric_items.ps1 `
    -LakehouseName M365LicenseFinOps `
    -TenantId <tenant-id> `
    -ClientId <graph-app-client-id> `
-   -KeyVaultUrl https://<your-vault>.vault.azure.net/ `
    -SubscriptionId <azure-subscription-id> `
    -IncludePriceMaster `
    -SkipNotebookRun
@@ -219,6 +251,7 @@ Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
 | 月額コストが 0 | SKU コードが単価表と一致していない |
 | レポートが「モデルを読み込めません」 | セマンティックモデルの Lakehouse 接続先が違う |
 | Direct Lake がエラー | Fabric 容量が一時停止している |
+| Notebookで接続が見つからない | Graph Web接続をNotebookのGlobal permissionsからConnectしていない |
 | Agent Storeに表示されない | Publish to Agent Store未実施、Copilot拡張が無効、または権限不足 |
 | Agentは開くが回答できない | セマンティックモデルまたはLakehouseへの利用者権限が不足 |
 
@@ -226,3 +259,4 @@ Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
 
 - [Consume Fabric data agent in Microsoft 365 Copilot](https://learn.microsoft.com/fabric/data-science/data-agent-microsoft-365-copilot)
 - [Fabric data agent sharing and permission management](https://learn.microsoft.com/fabric/data-science/data-agent-sharing)
+- [Fabric Connection in notebooks](https://learn.microsoft.com/fabric/data-engineering/fabric-connection-with-notebook)

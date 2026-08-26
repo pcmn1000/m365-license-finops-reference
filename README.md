@@ -44,6 +44,7 @@ flowchart LR
     subgraph FABRIC["Microsoft Fabric ワークスペース 1つ"]
         NB1["Notebook<br/>SyncM365LicenseUsage"]
         NB2["Notebook<br/>SyncM365PriceMaster"]
+        CONN["Web connection<br/>Graph認証情報"]
         SC["OneLake Shortcut<br/>Files/reference"]
         LH[("Lakehouse<br/>Deltaテーブル 10本<br/>階層なし・フラット")]
         PIPE["Pipeline<br/>DailyM365LicenseSync<br/>毎日 02:00 JST"]
@@ -56,6 +57,7 @@ flowchart LR
     end
 
     GRAPH --> NB1 --> LH
+    CONN -.-> NB1
     SPO --> SC --> NB2 --> LH
     PIPE --> NB1
     LH --> MODEL --> PBI
@@ -105,8 +107,9 @@ Bronze/Silver/Gold のような層は作らず、10本のDeltaテーブルをフ
 
 1. Fabric ワークスペースと Lakehouse を作る
 2. Entra ID にアプリ登録し、Graph のアプリケーション権限4つを付与する
-3. Key Vault に Graph アプリのシークレットを登録する
-4. `tools/deploy_fabric_items.ps1` を実行する
+3. `tools/deploy_fabric_items.ps1` を実行してGraph用Fabric Web接続と各アイテムを作る
+4. 初回だけ、Graph用接続をNotebookの **Global permissions** から **Connect** する
+5. **Current Notebook** の接続IDを `-GraphConnectionId` に指定して再実行する
 
 単価が不要なら SharePoint と Shortcut と `SyncM365PriceMaster` は省略できます。
 Notebook にはパブリック定価が定義済みで、Excel が無ければそのまま使われます。

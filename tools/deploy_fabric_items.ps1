@@ -15,8 +15,9 @@ param(
     [Parameter(Mandatory)]
     [string]$ClientId,
 
-    [Parameter(Mandatory)]
-    [string]$KeyVaultUrl,
+    [string]$GraphConnectionId,
+
+    [string]$GraphDataSourceId,
 
     [string]$SubscriptionId,
 
@@ -56,6 +57,81 @@ function Get-FabricToken {
 
 $token = Get-FabricToken
 $headers = @{ Authorization = "Bearer $token" }
+
+function Resolve-GraphDataSourceId {
+    if (-not [string]::IsNullOrWhiteSpace($GraphDataSourceId)) {
+        return $GraphDataSourceId
+    }
+
+    $connectionName = 'M365 FinOps Microsoft Graph'
+    $connections = Invoke-RestMethod `
+        -Method Get `
+        -Uri "$fabricBaseUrl/connections" `
+        -Headers $headers
+    $matches = @($connections.value | Where-Object {
+            $_.displayName -eq $connectionName -and
+            $_.connectionDetails.type -eq 'Web'
+        })
+    if ($matches.Count -eq 1) {
+        Write-Host "Using Fabric connection '$connectionName'."
+        return $matches[0].id
+    }
+    if ($matches.Count -gt 1) {
+        throw "Multiple Fabric connections named '$connectionName' exist. Pass -GraphDataSourceId explicitly."
+    }
+
+    Write-Host "Creating Fabric connection '$connectionName'..."
+    $secureSecret = Read-Host 'Enter the Graph application client secret' -AsSecureString
+    $secretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureSecret)
+    try {
+        $clientSecret = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($secretPointer)
+        $connectionBody = @{
+            connectivityType = 'ShareableCloud'
+            displayName = $connectionName
+            connectionDetails = @{
+                type = 'Web'
+                creationMethod = 'Web'
+                parameters = @(
+                    @{
+                        dataType = 'Text'
+                        name = 'url'
+                        value = 'https://graph.microsoft.com/v1.0'
+                    }
+                )
+            }
+            privacyLevel = 'Organizational'
+            credentialDetails = @{
+                singleSignOnType = 'None'
+                connectionEncryption = 'NotEncrypted'
+                skipTestConnection = $true
+                credentials = @{
+                    credentialType = 'ServicePrincipal'
+                    servicePrincipalClientId = $ClientId
+                    servicePrincipalSecret = $clientSecret
+                    tenantId = $TenantId
+                }
+            }
+            allowUsageInUserControlledCode = $true
+        } | ConvertTo-Json -Depth 20 -Compress
+        $connection = Invoke-RestMethod `
+            -Method Post `
+            -Uri "$fabricBaseUrl/connections" `
+            -Headers $headers `
+            -ContentType 'application/json; charset=utf-8' `
+            -Body $utf8NoBom.GetBytes($connectionBody)
+        return $connection.id
+    }
+    finally {
+        if ($secretPointer -ne [IntPtr]::Zero) {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($secretPointer)
+        }
+        $clientSecret = $null
+        $secureSecret = $null
+        $connectionBody = $null
+    }
+}
+
+$GraphDataSourceId = Resolve-GraphDataSourceId
 
 function Wait-FabricOperation {
     param([Parameter(Mandatory)][string]$Location)
@@ -254,26 +330,39 @@ function Convert-NotebookContent {
     $result = $result -replace '"default_lakehouse_name": "[^"]+"', "`"default_lakehouse_name`": `"$LakehouseName`""
     $result = $result -replace '"default_lakehouse_workspace_id": "[^"]+"', "`"default_lakehouse_workspace_id`": `"$WorkspaceId`""
     $result = $result -replace '"id": "[0-9a-fA-F-]{36}"', "`"id`": `"$LakehouseId`""
-    $result = $result -replace 'TENANT_ID = "[^"]+"', "TENANT_ID = `"$TenantId`""
-    $result = $result -replace 'CLIENT_ID = "[^"]+"', "CLIENT_ID = `"$ClientId`""
-    $result = $result -replace 'KEY_VAULT_URL = "[^"]+"', "KEY_VAULT_URL = `"$($KeyVaultUrl.TrimEnd('/'))/`""
+    if (-not [string]::IsNullOrWhiteSpace($GraphConnectionId)) {
+        $result = $result -replace 'GRAPH_CONNECTION_ID = "[^"]+"', "GRAPH_CONNECTION_ID = `"$GraphConnectionId`""
+    }
     return $result
 }
 
 $usageNotebookContent = [IO.File]::ReadAllText(
     (Join-Path $repoRoot 'demo/SyncM365LicenseUsage.py')
 )
-$usageNotebook = Set-FabricItem `
-    -Type 'Notebook' `
-    -DisplayName 'SyncM365LicenseUsage' `
-    -Parts @(
-        ConvertTo-DefinitionPart `
-            -Path 'notebook-content.py' `
-            -Content (Convert-NotebookContent -Content $usageNotebookContent)
-    )
+$usageNotebook = Get-FabricItem -Type 'Notebook' -DisplayName 'SyncM365LicenseUsage'
+$isNewUsageNotebook = $null -eq $usageNotebook
+if ($isNewUsageNotebook -or -not [string]::IsNullOrWhiteSpace($GraphConnectionId)) {
+    $usageNotebook = Set-FabricItem `
+        -Type 'Notebook' `
+        -DisplayName 'SyncM365LicenseUsage' `
+        -Parts @(
+            ConvertTo-DefinitionPart `
+                -Path 'notebook-content.py' `
+                -Content (Convert-NotebookContent -Content $usageNotebookContent)
+        )
+}
+else {
+    Write-Warning 'SyncM365LicenseUsage was left unchanged because -GraphConnectionId was not supplied.'
+}
 
-if (-not $SkipNotebookRun) {
+$isGraphConnectionReady = -not [string]::IsNullOrWhiteSpace($GraphConnectionId)
+if (-not $SkipNotebookRun -and $isGraphConnectionReady) {
     Start-FabricNotebook -NotebookId $usageNotebook.id
+}
+elseif (-not $isGraphConnectionReady) {
+    Write-Warning 'The notebook run was skipped because its Fabric Web connection must be bound once in the Fabric portal.'
+    Write-Warning "Open SyncM365LicenseUsage and connect data source '$GraphDataSourceId' from Global permissions."
+    Write-Warning 'Copy the ID shown under Current Notebook, then rerun this script with -GraphConnectionId <notebook-connection-id>.'
 }
 
 if ($IncludePriceMaster) {
@@ -362,6 +451,10 @@ $pipelineContent = $pipelineContent -replace `
 Write-Host ''
 Write-Host 'Deployment completed.'
 Write-Host "Workspace:       $WorkspaceId"
+Write-Host "Graph data source: $GraphDataSourceId"
+if ($isGraphConnectionReady) {
+    Write-Host "Notebook connection: $GraphConnectionId"
+}
 Write-Host "Usage notebook:  $($usageNotebook.id)"
 Write-Host "Semantic model:  $($semanticModel.id)"
 Write-Host "Data Agent:      $($dataAgent.id)"

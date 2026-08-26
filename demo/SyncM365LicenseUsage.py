@@ -51,9 +51,7 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
-TENANT_ID = "1ad1ccf5-59b8-474e-bb89-ee00c91edd48"
-CLIENT_ID = "ec28fec2-ef0b-41b6-9433-beb52e0c23dd"
-KEY_VAULT_URL = "https://kvm365finops37573032.vault.azure.net/"
+GRAPH_CONNECTION_ID = "00000000-0000-0000-0000-000000000000"
 GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
 REPORT_PERIOD = "D180"
 SNAPSHOT_DATE = datetime.now(timezone.utc).date()
@@ -195,25 +193,21 @@ def service_plan_metadata(service_plan_name):
 
 
 def acquire_graph_token():
-    client_secret = notebookutils.credentials.getSecret(KEY_VAULT_URL, "graph-client-secret")
-    try:
-        response = requests.post(
-            f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token",
-            data={
-                "client_id": CLIENT_ID,
-                "client_secret": client_secret,
-                "scope": "https://graph.microsoft.com/.default",
-                "grant_type": "client_credentials",
-            },
-            timeout=60,
+    connection = notebookutils.connections.getCredential(GRAPH_CONNECTION_ID)
+    credential = connection.get("credential")
+    if isinstance(credential, str):
+        credential = json.loads(credential)
+    values = {
+        str(item.get("name", "")).lower(): item.get("value")
+        for item in (credential or {}).get("credentialData", [])
+    }
+    token = values.get("accesstoken")
+    if not token:
+        raise RuntimeError(
+            "The Fabric Graph connection did not return an access token. "
+            "Use a Web connection with Service Principal authentication."
         )
-        response.raise_for_status()
-        token = response.json().get("access_token")
-        if not token:
-            raise RuntimeError("Microsoft Entra ID did not return an access token.")
-        return token
-    finally:
-        client_secret = None
+    return token
 
 
 GRAPH_TOKEN = acquire_graph_token()

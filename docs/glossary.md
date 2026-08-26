@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | Microsoft Entra ID | ユーザー、アプリ、認証、組織属性を管理するID基盤 | ユーザー、部門、拠点、役職、アカウント状態、ライセンス割り当ての取得元 |
 | Microsoft Graph | Microsoft 365やEntraのデータへアクセスするREST API | ユーザー、SKU、サービスプラン、Usage ReportsをNotebookから取得 |
-| Azure Key Vault | シークレットや証明書を保管するAzureサービス | GraphアプリのクライアントシークレットをNotebookへ安全に渡す |
+| Fabric Web接続 | 外部Web APIの接続先と資格情報をFabricで管理する接続 | Graphアプリの認証情報を暗号化して保管し、短期AccessTokenだけをNotebookへ渡す |
 | Microsoft Fabric | データ取り込み、保存、分析、AIをまとめたSaaS分析基盤 | Notebook、Lakehouse、Pipeline、セマンティックモデル、レポート、Data Agentを配置 |
 | Power BI | データモデルとレポートを作成・共有するBIサービス | 4ページのライセンスFinOpsレポートを表示 |
 | SharePoint Online | ファイルやリストを共同管理するMicrosoft 365サービス | 契約単価Excelの保管場所。単価管理が不要なら省略可能 |
@@ -111,8 +111,8 @@
 | Application Permission | ユーザーではなくアプリ自身に与えるGraph権限 | `User.Read.All`など4権限を使用 |
 | Admin Consent | 管理者がテナント全体で権限利用を承認すること | Graph API実行前に必要 |
 | Client ID | アプリ登録を識別するGUID | OAuthトークン取得時に使用 |
-| Client Secret | アプリが自身を証明する秘密値 | Key Vaultに保存し、GitやNotebookへ直書きしない |
-| RBAC | ロールによるアクセス制御 | Key VaultやFabricワークスペースへの権限付与 |
+| Client Secret | アプリが自身を証明する秘密値 | Fabric Web接続に保存し、GitやNotebookへ直書きしない |
+| RBAC | ロールによるアクセス制御 | Fabric接続やワークスペースへの権限付与 |
 | SSO | サインイン中ユーザーのIDでデータへアクセスする方式 | Direct Lakeの閲覧時に利用者のデータ権限を確認 |
 | RLS / OLS | 行単位 / オブジェクト単位のPower BIセキュリティ | モデルに設定した場合、Power BIとData Agentの回答にも適用 |
 

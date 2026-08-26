@@ -18,12 +18,11 @@ Microsoft 365 ライセンス FinOpsの現行構成を説明する1920 x 1080の
 
 ### 公式アイコンの出典
 
-- [Azure architecture icons](https://learn.microsoft.com/azure/architecture/icons/)
-  - Azure Key Vault
 - [Microsoft Entra architecture icons](https://learn.microsoft.com/entra/architecture/architecture-icons)
   - Microsoft Entra ID
 - [Microsoft Fabric product, workload, and item icons](https://learn.microsoft.com/fabric/fundamentals/icons)
   - Microsoft Fabric
+  - Fabric Web接続
   - Fabric Pipeline
   - Fabric Notebook
   - Fabric Lakehouse
@@ -51,4 +50,4 @@ PNGを再生成した場合は、このファイルにモデル、生成日、�
 | 背景モデル | Microsoft Foundry `FLUX.2-pro` |
 | 背景デプロイ名 | `flux2-pro` |
 | 画像サイズ | 1920 x 1080 |
-| SHA-256 | `7003FFE908DA86F6A4730CCB5B2B5A873BA5FF8DBF03BAEE12F1FFC5CE98E1E5` |
+| SHA-256 | `5AA4163688EEB5B2A2B1CE3B924CDC42E685368261184600D666076A76FA1C3D` |

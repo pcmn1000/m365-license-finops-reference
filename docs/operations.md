@@ -22,7 +22,7 @@ Pipeline は `DailyM365LicenseSync` の1本だけです。毎日 02:00
 - Graph権限はアプリケーション権限の最小セットに限定
 - 資格情報をNotebookやGitHubへ保存しない
 - AzureホストではManaged Identity/Workload Identityを優先
-- Client Secretが必要な場合はKey Vaultで保管し、有効期限とローテーションを監視
+- GraphのClient SecretはFabric Web接続で暗号化して保管し、有効期限とローテーションを監視
 - SPO単価マスタは更新者と承認者を分離し、バージョン履歴を有効化
 - ユーザー名やUPNを含むテーブルは機密として扱い、必要な利用者だけに付与
 - Power BIではRLS/OLSとBuild権限を設計

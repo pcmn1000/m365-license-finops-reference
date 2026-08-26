@@ -27,8 +27,8 @@
 ```mermaid
 flowchart LR
         APP["1. Entraアプリ登録<br/>Graph権限4つ"]
-        KV["2. Key Vault<br/>クライアントシークレット"]
-        CAP["3. Fabric容量・ワークスペース"]
+        CAP["2. Fabric容量・ワークスペース"]
+        CONN["3. Fabric Web接続<br/>Graph認証情報"]
         LH["4. Lakehouse"]
         NB["5. 同期Notebook"]
         TABLES["6. Deltaテーブル10本"]
@@ -37,9 +37,10 @@ flowchart LR
         AGENT["9. Data Agent"]
         PIPE["10. 日次Pipeline"]
 
-        APP --> KV
+        APP --> CONN
+        CAP --> CONN
         CAP --> LH
-        KV --> NB
+        CONN --> NB
         LH --> NB
         NB --> TABLES --> MODEL
         MODEL --> REPORT
@@ -50,8 +51,8 @@ flowchart LR
 | 順序 | 作るもの | 入力 | 出力・次で使うもの |
 | --- | --- | --- | --- |
 | 1 | Entraアプリ登録 | なし | テナントID、クライアントID、Graph権限 |
-| 2 | Key Vault | クライアントシークレット | Notebookから参照するSecret URI |
-| 3 | Fabric容量・ワークスペース | Azureサブスクリプション | ワークスペースID |
+| 2 | Fabric容量・ワークスペース | Fabric容量 | ワークスペースID |
+| 3 | Fabric Web接続 | GraphアプリのIDとシークレット | Notebookから参照する接続ID |
 | 4 | Lakehouse | ワークスペース | Lakehouse ID、OneLake保存先 |
 | 5 | `SyncM365LicenseUsage` | Graph認証情報、Lakehouse | Graphから取得したデータ |
 | 6 | Deltaテーブル10本 | Notebookの処理結果 | Direct Lakeで参照するテーブル |
@@ -61,7 +62,7 @@ flowchart LR
 | 10 | `DailyM365LicenseSync` | 同期Notebook | 毎日02:00の自動更新 |
 
 実際の配置は [構築手順](setup.md) の
-`tools/deploy_fabric_items.ps1` が手順5、7、8、9、10を自動化します。
+`tools/deploy_fabric_items.ps1` が手順3、5、7、8、9、10を自動化します。
 
 ### データが回答になるまで
 
@@ -93,7 +94,7 @@ flowchart LR
 | --- | --- | --- |
 | Microsoft Entra ID | ユーザー、組織属性、ライセンス割り当ての正本 | 利用実績や契約単価の保持 |
 | Microsoft Graph | Microsoft 365データをAPIで返す | データの長期保存、契約単価の提供 |
-| Azure Key Vault | Graphのクライアントシークレットを保管 | データ変換や分析 |
+| Fabric Web接続 | Graphの認証情報を暗号化して保管し、短期AccessTokenを発行 | データ変換や分析 |
 | Fabric Notebook | API取得、正規化、分類、Delta書き込み | レポート表示、ユーザー対話 |
 | Fabric Lakehouse | 最新マスタと日次ファクトをDelta形式で保持 | 指標の意味や画面レイアウトの定義 |
 | Fabric Pipeline | Notebookを毎日実行 | データの中身の計算 |
@@ -101,6 +102,9 @@ flowchart LR
 | Power BIレポート | KPI、表、グラフ、フィルター、ドリルダウンを表示 | データの取得・保存 |
 | Fabric Data Agent | 自然言語をDAXへ変換し、モデルのデータで回答 | データ更新、ライセンス変更 |
 | SharePoint + Shortcut | 契約単価Excelを保管し、Lakehouseから参照 | Excelを自動で分析テーブルへ変換 |
+
+NotebookはFabric Web接続の専用IDを使って短期AccessTokenを取得します。
+クライアントシークレットはNotebookやGitへ保存されず、実行時にもNotebookへ渡りません。
 
 ### 取得している Graph API
 
