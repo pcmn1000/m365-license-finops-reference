@@ -231,7 +231,40 @@ Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
 > Fabric内の「公開」とAgent Storeへの公開は別です。published定義が存在するだけでは、
 > Microsoft 365 CopilotのAgent Storeには表示されません。
 
-## 9. 動作確認
+## 9. Power BIレポートをWebへ匿名公開する（任意）
+
+Direct Lakeモデルは既定でSSOを使うため、`Web に公開`の対象にできません。
+既存の社内向けモデルとData Agentを変えず、公開専用のImportモデルとレポートを
+別アイテムとして作ります。
+
+1. LakehouseのSQL分析エンドポイントを開き、サーバー名とデータベース名を確認する
+2. Fabricの **接続とゲートウェイの管理** でSQL Serverクラウド接続を作る
+3. 認証方法を **OAuth 2.0**、SSOをオフにし、接続名を決める
+4. 次のスクリプトを実行する
+
+```powershell
+pwsh -File .\tools\deploy_public_report.ps1 `
+   -WorkspaceId <workspace-id> `
+   -SqlServer <lakehouse-sql-endpoint> `
+   -SqlDatabase <lakehouse-name> `
+   -SqlConnectionName <oauth-sql-connection-name> `
+   -SubscriptionId <azure-subscription-id>
+```
+
+スクリプトは元のTMDLをディスク上で書き換えず、メモリ上で9テーブルをImportへ変換します。
+公開専用モデルをSQL OAuth接続へバインドして更新し、同じPBIRを別名のレポートとして配置します。
+既定ではImportモデルを毎日03:00、`Tokyo Standard Time`に更新します。
+
+5. Power BI管理ポータルの **Web に公開** で、新しい埋め込みコードの作成を許可する
+6. `M365 License FinOps Public Report` を開く
+7. **ファイル** > **レポートの埋め込み** > **Web に公開 (パブリック)** を選ぶ
+8. 警告内容を確認して発行し、サインアウト状態でURLを検証する
+
+> [!WARNING]
+> Web公開URLを知る人は、認証なしでセマンティックモデル内の全データへアクセスできます。
+> 個人情報、機密情報、RLSで保護すべきデータには使用しないでください。
+
+## 10. 動作確認
 
 - Lakehouse に10本のテーブルがあり、`snapshot_date` が当日になっている
 - Power BI レポートの4ページがすべて表示される
@@ -241,6 +274,7 @@ Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
 - Data Agentで「E5の機能名とサービスプラン品番の対応を見せて」と質問できる
 - Data Agentが機能の有効化を実利用と断定しない
 - Agent Storeへ公開した場合、Microsoft 365 CopilotでAgent名を検索または`@`指定できる
+- Web公開した場合、サインアウト状態で4ページを表示できる
 
 ## つまずきやすいところ
 
@@ -254,6 +288,8 @@ Microsoft 365 Copilotからの回答にも同じ制御が適用されます。
 | Notebookで接続が見つからない | Graph Web接続をNotebookのGlobal permissionsからConnectしていない |
 | Agent Storeに表示されない | Publish to Agent Store未実施、Copilot拡張が無効、または権限不足 |
 | Agentは開くが回答できない | セマンティックモデルまたはLakehouseへの利用者権限が不足 |
+| Web公開コードを作れない | Direct Lake/SSOモデルを選んでいる、または新規埋め込みコード作成がテナントで無効 |
+| Public Modelを更新できない | SQL接続が既定SSOのまま。OAuth 2.0の明示的クラウド接続へバインドする |
 
 ## 公式リファレンス
 

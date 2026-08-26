@@ -12,12 +12,19 @@
 | Pipeline | `DailyM365LicenseSync` |
 | Semantic model | `M365 License FinOps Model` |
 | Report | `M365 License FinOps Report`（4ページ） |
+| Public semantic model | `M365 License FinOps Public Model` (`5e81798e-50e2-4ce5-a86f-c44b38051612`) |
+| Public report | `M365 License FinOps Public Report` (`dd00c651-589f-45d4-aff2-73becb9c06c0`) |
+| Public SQL connection | `M365 FinOps Lakehouse SQL Public` (`505a9e85-d037-480b-b967-a2a7fe2b3178`) |
 | SPO site | `M365 License FinOps Data` |
 | Fabric connection | `M365FinOpsSPO admin` (`673c247a-7b90-4865-b78b-a703191d7515`) |
 | OneLake Shortcut | `Files/reference/sharepoint-license-prices` |
 | Data Agent | `M365LicenseFinOpsAgent` |
 
 Lakehouse の Delta テーブルは10本で、Bronze/Silver/Gold のような層は作っていません。
+
+匿名公開URL:
+
+[M365 License FinOps Public Report](https://app.powerbi.com/view?r=eyJrIjoiN2M2NWFlYTMtYTNhNC00ODA0LTk2MTYtMTEwNTJjOWYxNThkIiwidCI6IjFhZDFjY2Y1LTU5YjgtNDc0ZS1iYjg5LWVlMDBjOTFlZGQ0OCJ9)
 
 ```text
 dim_user  dim_sku  dim_sku_price  dim_service_plan  bridge_sku_service_plan
@@ -93,6 +100,7 @@ E3/E5を判断します。
 - 単価の定期照合: 日次Pipelineでも再確認
 
 `DailyM365LicenseSync`は毎日02:00、`Tokyo Standard Time`で有効です。
+公開用Importモデルは毎日03:00、`Tokyo Standard Time`で有効です。
 
 ## Usage Reportsの匿名化
 

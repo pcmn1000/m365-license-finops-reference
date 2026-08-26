@@ -64,6 +64,29 @@ flowchart LR
 実際の配置は [構築手順](setup.md) の
 `tools/deploy_fabric_items.ps1` が手順3、5、7、8、9、10を自動化します。
 
+### 匿名公開用の分岐
+
+社内向けのDirect LakeモデルはSSOを使うため、Power BIの`Web に公開`では利用できません。
+匿名公開が必要な場合だけ、Lakehouse SQL分析エンドポイントからデータを取り込む
+Importモデルとレポートを別アイテムとして作ります。
+
+```mermaid
+flowchart LR
+        LH["Lakehouse"]
+        INTERNAL["Direct Lakeモデル<br/>SSO・社内向け"]
+        REPORT["社内向けレポート / Data Agent"]
+        SQL["SQL分析エンドポイント"]
+        CONN["SQL OAuth 2.0接続<br/>SSOなし"]
+        PUBLIC["Importモデル<br/>毎日03:00 JST更新"]
+        WEB["匿名公開レポート"]
+
+        LH --> INTERNAL --> REPORT
+        LH --> SQL --> CONN --> PUBLIC --> WEB
+```
+
+`tools/deploy_public_report.ps1` は元のTMDLをメモリ上でImportパーティションへ変換します。
+Direct Lakeモデル、Data Agent、PBIRのソース定義は変更しません。
+
 ### データが回答になるまで
 
 ```mermaid
@@ -100,6 +123,7 @@ flowchart LR
 | Fabric Pipeline | Notebookを毎日実行 | データの中身の計算 |
 | セマンティックモデル | リレーション、表示名、DAXメジャーを定義 | Graph APIの呼び出し |
 | Power BIレポート | KPI、表、グラフ、フィルター、ドリルダウンを表示 | データの取得・保存 |
+| 公開用Importモデル | Lakehouse SQLから公開可能なキャッシュを作る | 社内向けSSOやData Agentの提供 |
 | Fabric Data Agent | 自然言語をDAXへ変換し、モデルのデータで回答 | データ更新、ライセンス変更 |
 | SharePoint + Shortcut | 契約単価Excelを保管し、Lakehouseから参照 | Excelを自動で分析テーブルへ変換 |
 

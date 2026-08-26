@@ -8,6 +8,9 @@ Notebook のソース、セマンティックモデルの TMDL、レポートの
 Pipeline の定義、環境固有IDを置換してFabricへ配置するスクリプトが入っています。
 [構築手順](docs/setup.md) に沿えば、自分のテナントに同じものを作れます。
 
+デモレポートは匿名で閲覧できます。
+[M365 License FinOps Public Report](https://app.powerbi.com/view?r=eyJrIjoiN2M2NWFlYTMtYTNhNC00ODA0LTk2MTYtMTEwNTJjOWYxNThkIiwidCI6IjFhZDFjY2Y1LTU5YjgtNDc0ZS1iYjg5LWVlMDBjOTFlZGQ0OCJ9)
+
 この構成は次の問いに答えます。
 
 - 何を何ライセンス購入し、誰に割り当てているか
@@ -74,6 +77,8 @@ flowchart LR
 | Pipeline | `DailyM365LicenseSync` | Notebookを日次実行 |
 | Semantic model | `M365 License FinOps Model` | Direct Lake |
 | Report | `M365 License FinOps Report` | 4ページ / 34ビジュアル |
+| Public semantic model | `M365 License FinOps Public Model` | Web公開専用のImport複製 |
+| Public report | `M365 License FinOps Public Report` | 匿名公開する4ページの複製 |
 | Data Agent | `M365LicenseFinOpsAgent` | 在庫、割り当て、利用、コスト、E5機能を自然言語で照会 |
 
 Fabric 容量は F8 (Japan East) です。Graph のアプリケーション権限は
@@ -162,6 +167,7 @@ Pipeline も後回しにして、まず手動実行で構いません。
 | `demo/M365LicenseFinOps.DataAgent/` | Data Agentの指示、データソース選択、few-shot |
 | `demo/pipeline-content.json` | 日次Pipelineの定義 |
 | `tools/deploy_fabric_items.ps1` | 環境IDを置換し、Fabricアイテムを作成・更新するスクリプト |
+| `tools/deploy_public_report.ps1` | TMDLを実行時にImportへ変換し、Web公開専用モデルとレポートを配置 |
 | `tools/create_price_master.py` | 単価マスタExcelの生成スクリプト |
 | `sample-data/License-Price-Master.xlsx` | 単価マスタの記入例 |
 
