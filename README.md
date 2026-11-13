@@ -39,9 +39,7 @@ Power BI と Data Agent が読みます。
 
 ![Microsoft 365 ライセンス FinOps の現行アーキテクチャ。Microsoft GraphとSharePointからFabricへ取り込み、Lakehouse、セマンティックモデル、Power BI、Data Agent、Microsoft 365 Copilotへ接続する構成図。](docs/images/architecture-overview.png)
 
-背景は Microsoft Foundry の `FLUX.2-pro` で生成し、製品アイコンはMicrosoft公式配布
-アセットを合成しています。[図の生成元とアイコン出典](docs/images/README.md)も参照してください。
-次のMermaidは同じ構成を更新しやすい形式で表したものです。
+
 
 ```mermaid
 flowchart LR
